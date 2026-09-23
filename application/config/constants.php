@@ -95,4 +95,4 @@ defined('EXIT__AUTO_MAX') || define('EXIT__AUTO_MAX', 125); // highest automatic
 | filenames and follows InvoicePlane's numbering.
 |
 */
-defined('INVOICEMUSE_VERSION') || define('INVOICEMUSE_VERSION', '1.0.0');
+defined('INVOICEMUSE_VERSION') || define('INVOICEMUSE_VERSION', '1.0.1');

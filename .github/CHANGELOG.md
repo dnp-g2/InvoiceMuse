@@ -16,6 +16,15 @@ record *why* and *how*.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-23
+
+### Fixed
+
+- Upgrades from InvoicePlane 1.7.2 installs that had already applied the original
+  `043_1.7.2.sql` now receive `ip_users.user_passwordreset_token_expiry`. Without it, password
+  reset failed on the missing column. The new `046_1.7.3` migration adds the column only when it
+  is absent ([#9](https://github.com/dnp-g2/InvoiceMuse/issues/9)).
+
 ## [1.0.0] - 2026-09-23
 
 First InvoiceMuse release. It is based on InvoicePlane 1.7.3 and includes the later InvoicePlane
