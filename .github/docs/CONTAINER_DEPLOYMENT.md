@@ -3,9 +3,10 @@
 > [!WARNING]
 > The container always uses the new (per-item) tax calculation mode.
 
-A pre-built container image is available. Configuration is provided entirely through environment
-variables — no `ipconfig.php` file is needed. The entrypoint generates the configuration and
-runs any pending database migrations automatically on startup.
+The InvoiceMuse container image builds from `resources/docker/Containerfile` (for example with
+`docker compose build`). Configuration is provided entirely through environment variables, so no
+`ipconfig.php` file is needed. The entrypoint generates the configuration and runs any pending
+database migrations automatically on startup.
 
 ## Required environment variables
 

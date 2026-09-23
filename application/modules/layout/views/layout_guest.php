@@ -10,7 +10,7 @@
 <html class="no-js" lang="<?php _trans('cldr'); ?>"> <!--<![endif]-->
 
 <head>
-    <title><?php echo get_setting('custom_title', 'InvoicePlane', true); ?></title>
+    <title><?php echo get_setting('custom_title', 'InvoiceMuse', true); ?></title>
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -22,6 +22,7 @@
     <meta name="legacy_calculation" content="<?php echo (int) (config_item('legacy_calculation')); ?>">
 
     <link rel="icon" href="<?php _core_asset('img/favicon.png'); ?>" type="image/png">
+    <link rel="icon" href="<?php _core_asset('img/favicon.svg'); ?>" type="image/svg+xml">
 
     <link rel="stylesheet" href="<?php _theme_asset('css/style.css'); ?>" type="text/css">
     <link rel="stylesheet" href="<?php _core_asset('css/custom.css'); ?>" type="text/css">

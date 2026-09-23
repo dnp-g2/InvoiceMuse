@@ -18,7 +18,7 @@ $disabled  = env_bool('DISABLE_SETUP') ? ' hidden' : '';
     <!-- Use the .htaccess and remove these lines to avoid edge case issues -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-    <title><?php echo get_setting('custom_title', 'InvoicePlane', true); ?></title>
+    <title><?php echo get_setting('custom_title', 'InvoiceMuse', true); ?></title>
 
     <!-- Mobile viewport optimized: j.mp/bplateviewport -->
     <meta name="viewport" content="width=device-width">
@@ -34,12 +34,12 @@ $disabled  = env_bool('DISABLE_SETUP') ? ' hidden' : '';
 <div class="container">
 
     <div id="content">
-        <div id="logo"><span>InvoicePlane</span></div>
+        <div id="logo"><span>InvoiceMuse</span></div>
         <p class="alert alert-info text-center<?php echo $completed ? '' : ' hidden'; ?>">
-            Please install InvoicePlane.<br/>
-            <span class="text-muted">Bitte installiere InvoicePlane.</span><br/>
-            <span class="text-muted">S'il vous plaît installer InvoicePlane</span><br/>
-            <span class="text-muted">Por favor, instale InvoicePlane</span><br/>
+            Please install InvoiceMuse.<br/>
+            <span class="text-muted">Bitte installiere InvoiceMuse.</span><br/>
+            <span class="text-muted">S'il vous plaît installer InvoiceMuse</span><br/>
+            <span class="text-muted">Por favor, instale InvoiceMuse</span><br/>
         </p>
 
         <div class="btn-group btn-group-justified">

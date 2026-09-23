@@ -14,6 +14,11 @@ record *why* and *how*.
 
 ## [Unreleased]
 
+### Changed
+
+- **Rebranded as InvoiceMuse.** InvoiceMuse is based on [InvoicePlane](https://www.invoiceplane.com/), and the admin and setup pages now carry a credit thanking its developers and contributors. The upstream copyright and MIT license notice remain in `LICENSE.txt`. Removed the Settings update check and news feed, which queried InvoicePlane's update and news services.
+- **Bundled templates renamed.** `InvoicePlane`, `InvoicePlane - paid`, `InvoicePlane - overdue` and `InvoicePlane_Web` are now `InvoiceMuse`, `InvoiceMuse - paid`, `InvoiceMuse - overdue` and `InvoiceMuse_Web`. Migration `045_1.7.3.sql` updates saved template settings and email template PDF choices; until it runs, PDFs fall back to the `InvoiceMuse` template without paid/overdue stamps. Custom templates that include the old files need the new file names. See [UPGRADE.md](docs/UPGRADE.md#moving-from-invoiceplane-to-invoicemuse).
+
 ### Security fixes
 
 - **Unauthenticated disclosure of sensitive financial data via static-file exposure (CWE-538, CWE-284, CWE-22, CWE-668):** nginx deployments using the project's bundled configuration did not deny direct access to the `/uploads/` subdirectories. The at-rest protection of `uploads/customer_files/`, `uploads/archive/`, `uploads/import/`, and `uploads/temp/` relied on `.htaccess` files containing `Deny from all`, which nginx does not honor. An unauthenticated attacker could directly download raw import CSV files (client names, addresses, payment amounts), archived invoice PDFs (enumerable by date + invoice number), and temporary files, bypassing all application-level access control. **Fix:** explicit `location ^~ /uploads/<subdir>/` deny blocks added to `resources/docker/nginx/invoiceplane.conf`; import CSV files are now deleted immediately after processing (not persisted to disk); archived PDF filenames are randomized (32-hex-character token instead of `YYYY-MM-DD_<name>` pattern) to prevent enumeration. **Recommendation:** existing nginx deployments should upgrade this configuration block and consider moving `uploads/` outside the web root (served only through authenticated PHP endpoints). Thanks to [@nirtem](https://github.com/nirtem) and [@d3do-23](https://github.com/d3do-23) for responsible disclosure. [#1716](https://github.com/InvoicePlane/InvoicePlane/pull/1716)

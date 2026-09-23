@@ -98,7 +98,7 @@ class View extends Base_Controller
 
         // Security: Validate and get template path with defense-in-depth
         $requested_template = get_setting('public_invoice_template');
-        $template_info      = get_validated_template_path($requested_template, 'invoice', 'public', 'InvoicePlane_Web');
+        $template_info      = get_validated_template_path($requested_template, 'invoice', 'public', 'InvoiceMuse_Web');
 
         render_template_view($template_info['path'], $data);
     }
@@ -216,7 +216,7 @@ class View extends Base_Controller
         // Security: Validate and get template path with defense-in-depth
         $this->load->helper('template');
         $requested_template = get_setting('public_quote_template');
-        $template_info      = get_validated_template_path($requested_template, 'quote', 'public', 'InvoicePlane_Web');
+        $template_info      = get_validated_template_path($requested_template, 'quote', 'public', 'InvoiceMuse_Web');
 
         render_template_view($template_info['path'], $data);
     }

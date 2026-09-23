@@ -1,6 +1,6 @@
 # Security Policy
 
-InvoicePlane handles sensitive financial data, so we take security reports seriously and
+InvoiceMuse handles sensitive financial data, so we take security reports seriously and
 appreciate the work of the researchers who help keep our users safe.
 
 ## Supported Versions
@@ -17,20 +17,20 @@ the maintainers' discretion.
 
 ## Reporting a Vulnerability
 
-**Please report vulnerabilities privately — do not open a public issue, pull request, or forum
-post for a security problem.**
+**Please report vulnerabilities privately.** Use the private channel below and keep security
+problems out of public issues, pull requests, and forum posts.
 
-The preferred channel is a **private GitHub Security Advisory**:
+Report through a **private GitHub Security Advisory**:
 
-1. Go to the [**Security Advisories**](https://github.com/InvoicePlane/InvoicePlane/security/advisories) page.
-2. Click **“Report a vulnerability”** ([direct link](https://github.com/InvoicePlane/InvoicePlane/security/advisories/new)).
+1. Go to the [**Security Advisories**](https://github.com/dnp-g2/InvoiceMuse/security/advisories) page.
+2. Click **“Report a vulnerability”** ([direct link](https://github.com/dnp-g2/InvoiceMuse/security/advisories/new)).
 3. Fill in the details (see below). Only you and the maintainers can see the draft advisory.
 
 Reporting through an advisory lets us collaborate on the fix privately, request a CVE, and credit
 you accurately when the advisory is published.
 
-If you are unable to use GitHub Security Advisories, you may email
-**[mail@invoiceplane.com](mailto:mail@invoiceplane.com)** instead.
+If the vulnerability is in upstream InvoicePlane code, please also report it to the InvoicePlane
+project through [its security policy](https://github.com/InvoicePlane/InvoicePlane/security/policy).
 
 ### What to include
 
@@ -53,6 +53,6 @@ Please give us a reasonable opportunity to release a fix before any public discl
 
 ## Published Advisories
 
-Formal advisories and CVE request material for past releases live in
+Formal advisories and CVE request material inherited from InvoicePlane releases live in
 [`.github/security/`](.github/security/), and every fixed vulnerability is tracked with its GHSA
 link, CWE, CVSS score, and reporter in the [CHANGELOG](.github/CHANGELOG.md).

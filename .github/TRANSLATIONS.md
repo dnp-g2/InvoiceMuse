@@ -1,12 +1,15 @@
-# Translating InvoicePlane
+# Translating InvoiceMuse
 
-InvoicePlane is a multilingual application, and we rely on community contributions to keep translations up to date. If you want to help translate InvoicePlane into your language, follow this guide.
+InvoiceMuse is a multilingual application, and we rely on community contributions to keep translations up to date. If you want to help translate InvoiceMuse into your language, follow this guide.
 
 ## 🌍 Where Are Translations Managed?
 
-All translations for InvoicePlane are hosted on **[Crowdin](https://crowdin.com/)** under the project **FusionInvoice**.
+InvoiceMuse inherits its language strings from InvoicePlane.
 
-## 🔹 How to Contribute
+- Strings shared with InvoicePlane are translated by the InvoicePlane community on [Crowdin](https://crowdin.com/) under the project `FusionInvoice`.
+- Strings specific to InvoiceMuse (anything that names InvoiceMuse or covers an InvoiceMuse-only feature) are updated through a pull request to the [InvoiceMuse repository](https://github.com/dnp-g2/InvoiceMuse).
+
+## 🔹 How to Contribute on Crowdin
 
 1. **Sign up for a Crowdin account** at [crowdin.com](https://crowdin.com/).
 2. **Request access to the FusionInvoice project** by searching for `FusionInvoice`.
@@ -19,7 +22,7 @@ All translations for InvoicePlane are hosted on **[Crowdin](https://crowdin.com/
 - Follow existing terminology to ensure consistency.
 - Do **not** translate placeholders like `{invoice_number}` or `{client_name}`.
 - Keep the formatting intact, especially in Markdown or HTML-based text.
-- If unsure, ask in the **InvoicePlane Community Forums** before making significant changes.
+- If unsure, ask in an [InvoiceMuse issue](https://github.com/dnp-g2/InvoiceMuse/issues) before making significant changes.
 
 ## 🛠️ Technical Details
 
@@ -30,7 +33,7 @@ All translations for InvoicePlane are hosted on **[Crowdin](https://crowdin.com/
 
 ## 💡 Need Help?
 
-If you have any questions, post in the **[InvoicePlane Community Forums](https://community.invoiceplane.com/)** or ask in our translation discussions on Crowdin.
+If you have any questions, open an [InvoiceMuse issue](https://github.com/dnp-g2/InvoiceMuse/issues) or ask in the translation discussions on Crowdin.
 
 ---
-*Thank you for helping make InvoicePlane accessible to a global audience!*
+*Thank you for helping make InvoiceMuse accessible to a global audience!*

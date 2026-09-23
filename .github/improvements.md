@@ -80,12 +80,12 @@ on disk, only the names in the constant can ever be loaded:
 
 ```php
 private const ALLOWED_INVOICE_TEMPLATES = [
-    'pdf'    => ['InvoicePlane', 'InvoicePlane - paid', 'InvoicePlane - overdue'],
-    'public' => ['InvoicePlane_Web'],
+    'pdf'    => ['InvoiceMuse', 'InvoiceMuse - paid', 'InvoiceMuse - overdue'],
+    'public' => ['InvoiceMuse_Web'],
 ];
 private const ALLOWED_QUOTE_TEMPLATES = [
-    'pdf'    => ['InvoicePlane'],
-    'public' => ['InvoicePlane_Web'],
+    'pdf'    => ['InvoiceMuse'],
+    'public' => ['InvoiceMuse_Web'],
 ];
 
 public function get_invoice_templates($type = 'pdf')

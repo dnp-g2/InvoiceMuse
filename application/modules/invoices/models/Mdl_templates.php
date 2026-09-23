@@ -32,12 +32,12 @@ class Mdl_Templates extends CI_Model
      */
     private const ALLOWED_INVOICE_TEMPLATES = [
         'pdf' => [
-            'InvoicePlane',
-            'InvoicePlane - paid',
-            'InvoicePlane - overdue',
+            'InvoiceMuse',
+            'InvoiceMuse - paid',
+            'InvoiceMuse - overdue',
         ],
         'public' => [
-            'InvoicePlane_Web',
+            'InvoiceMuse_Web',
         ],
     ];
 
@@ -51,11 +51,24 @@ class Mdl_Templates extends CI_Model
      */
     private const ALLOWED_QUOTE_TEMPLATES = [
         'pdf' => [
-            'InvoicePlane',
+            'InvoiceMuse',
         ],
         'public' => [
-            'InvoicePlane_Web',
+            'InvoiceMuse_Web',
         ],
+    ];
+
+    /**
+     * Pre-rebrand names of the bundled templates. Migration 045_1.7.3.sql renames saved
+     * settings, but the 1.7.2 upgrade check can run before it in the same upgrade.
+     *
+     * @var array
+     */
+    private const LEGACY_BUILT_IN_TEMPLATES = [
+        'InvoicePlane',
+        'InvoicePlane - paid',
+        'InvoicePlane - overdue',
+        'InvoicePlane_Web',
     ];
 
     /**
@@ -193,7 +206,9 @@ class Mdl_Templates extends CI_Model
             foreach ($check['settings'] as $setting_key) {
                 $template_name = get_setting($setting_key);
 
-                if ($template_name === '' || in_array($template_name, $check['allowed'], true)) {
+                if ($template_name === ''
+                    || in_array($template_name, $check['allowed'], true)
+                    || in_array($template_name, self::LEGACY_BUILT_IN_TEMPLATES, true)) {
                     continue;
                 }
 

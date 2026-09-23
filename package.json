@@ -1,17 +1,9 @@
 {
-    "name": "invoiceplane",
+    "name": "invoicemuse",
     "version": "1.7.2",
-    "description": "InvoicePlane is a self-hosted open source application for managing your invoices, clients and payments",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/InvoicePlane/InvoicePlane.git"
-    },
-    "author": "InvoicePlane Developers & Contributors",
+    "description": "InvoiceMuse is a self-hosted open source application for managing invoices, clients, and payments",
+    "author": "InvoiceMuse contributors; based on work by InvoicePlane developers and contributors",
     "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/InvoicePlane/InvoicePlane/issues"
-    },
-    "homepage": "https://www.invoiceplane.com",
     "scripts": {
         "build": "grunt build"
     },
