@@ -1,3 +1,4 @@
+<?php $property_type='quote'; $property_document=$quote; $this->load->view('service_properties/editor', compact('property_type','property_document','items')); ?>
 <?php
 // Little helper
 $its_mine = $this->session->__get('user_id') == $quote->user_id;
@@ -73,6 +74,8 @@ if ($quote->quote_status_id == 1) {
                     quote_status_id: $('#quote_status_id').val(),
                     quote_password: $('#quote_password').val(),
                     items: JSON.stringify(items),
+                    property_revision: window.propertyRevision || 0,
+                    property_refresh: $('#property-refresh').is(':checked') ? '1' : '0',
                     quote_discount_amount: $('#quote_discount_amount').val(),
                     quote_discount_percent: $('#quote_discount_percent').val(),
                     notes: $('#notes').val(),
@@ -80,6 +83,7 @@ if ($quote->quote_status_id == 1) {
                 },
                 function (data) {
                     var response = json_parse(data, <?php echo (int) IP_DEBUG; ?>);
+                        if (response.property_revision) window.propertyRevision = response.property_revision;
                     if (response.success === 1) {
                         window.location = "<?php echo site_url('quotes/view'); ?>/" + <?php echo $quote_id; ?>;
                     } else {
@@ -114,9 +118,11 @@ if ($quote->quote_status_id == 1) {
             } else {
                 $.post("<?php echo site_url('quotes/ajax/delete_item/' . $quote->quote_id); ?>", {
                         'item_id': item_id,
+                        'property_revision': window.propertyRevision || 0,
                     },
                     function (data) {
                         var response = json_parse(data, <?php echo (int) IP_DEBUG; ?>);
+                        if (response.property_revision) window.propertyRevision = response.property_revision;
                         if (response.success === 1) {
                             btn.parents('.item').remove();
                         } else {

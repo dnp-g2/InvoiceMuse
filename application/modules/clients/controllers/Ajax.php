@@ -18,6 +18,24 @@ class Ajax extends Admin_Controller
 {
     public $ajax_controller = true;
 
+    public function quick_create()
+    {
+        if ($this->input->method() !== 'post') { show_404(); return; }
+        property_csrf_header();
+        $this->load->model('clients/mdl_client_quick_create');
+        try {
+            $key = $this->input->post('request_id');
+            $version = $this->input->post('match_version') ?? '';
+            if (!is_string($key) || !is_string($version)) { throw new InvalidArgumentException('Invalid customer form.'); }
+            $response = $this->mdl_client_quick_create->create($this->input->post(), $key, $this->input->post('separate_customer') === '1', $version);
+            if ($response['success'] === 1) { $response['next_request_id'] = $this->mdl_client_quick_create->new_request(); }
+        } catch (Throwable $e) {
+            $response = ['success' => 0, 'message' => $e instanceof RuntimeException || $e instanceof InvalidArgumentException ? $e->getMessage() : 'Unable to save the customer. Retry with the same details to check the result.'];
+        }
+        $response['new_token'] = $this->security->get_csrf_hash();
+        $this->output->set_content_type('application/json')->set_output(json_encode($response));
+    }
+
     public function name_query()
     {
         // Load the model & helper
@@ -101,35 +119,30 @@ class Ajax extends Admin_Controller
         $this->mdl_settings->save('enable_permissive_search_clients', $permissiveSearchClients);
     }
 
-    /**
-     * Delete client note id.
-     */
     public function delete_client_note()
     {
-        $success        = 0;
-        $client_note_id = $this->input->post('client_note_id');
-        $this->load->model('mdl_client_notes');
+        $this->output->set_status_header(410);
+        header('X-CSRF-Token: ' . $this->security->get_csrf_hash());
+        echo json_encode(['success' => 0, 'message' => 'Notes can now be archived. Reload the customer page.']);
+    }
 
-        // Only continue if the note exists or no item id was provided
-        if ($this->mdl_client_notes->get_by_id($client_note_id) || empty($client_note_id)) {
-            // Delete invoice item
-            $this->load->model('mdl_client_notes');
-            $item = $this->mdl_client_notes->delete($client_note_id);
-
-            // Check if deletion was successful
-            if ($item) {
-                $success = 1;
-            }
+    public function archive_client_note()
+    {
+        if ($this->input->method() !== 'post') {
+            show_404();
+            return;
         }
-
-        // Return the response
-        echo json_encode([
-            'success' => $success,
-        ]);
+        header('X-CSRF-Token: ' . $this->security->get_csrf_hash());
+        $action = $this->input->post('action');
+        $this->load->model('clients/mdl_client_notes');
+        $success = in_array($action, ['archive', 'restore'], true)
+            && $this->mdl_client_notes->set_archived((int)$this->input->post('client_id'), (int)$this->input->post('client_note_id'), $action === 'archive');
+        echo json_encode(['success' => (int)$success, 'new_token' => $this->security->get_csrf_hash(), 'message' => $success ? '' : 'Unable to update this customer note. Reload and try again.']);
     }
 
     public function save_client_note()
     {
+        header('X-CSRF-Token: ' . $this->security->get_csrf_hash());
         $this->load->model('clients/mdl_client_notes');
 
         if ($this->mdl_client_notes->run_validation()) {
@@ -153,6 +166,7 @@ class Ajax extends Admin_Controller
 
     public function load_client_notes()
     {
+        header('X-CSRF-Token: ' . $this->security->get_csrf_hash());
         $this->load->model('clients/mdl_client_notes');
         $data = [
             'client_notes' => $this->mdl_client_notes->where(

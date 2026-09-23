@@ -1,3 +1,11 @@
+<?php
+$client_update_pending_count = 0;
+if ($this->db->table_exists('ip_client_update_requests')) {
+    $client_update_pending_count = (int) $this->db
+        ->where('status', 'pending')
+        ->count_all_results('ip_client_update_requests');
+}
+?>
 <nav class="navbar navbar-inverse" role="navigation">
     <div class="container-fluid">
         <div class="navbar-header">
@@ -22,6 +30,14 @@
                     <ul class="dropdown-menu">
                         <li><?php echo anchor('clients/form', trans('add_client')); ?></li>
                         <li><?php echo anchor('clients/index', trans('view_clients')); ?></li>
+                        <li>
+                            <a href="<?php echo site_url('client-updates'); ?>">
+                                Client information updates
+<?php if ($client_update_pending_count > 0) { ?>
+                                <span class="badge"><?php echo $client_update_pending_count; ?></span>
+<?php } ?>
+                            </a>
+                        </li>
                     </ul>
                 </li>
 

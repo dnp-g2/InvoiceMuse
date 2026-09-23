@@ -55,9 +55,21 @@ class Mdl_Client_Notes extends Response_Model
      */
     public function delete($id): bool
     {
-        parent::delete($id);
+        // Notes can only be archived through customer-scoped actions.
+        return false;
+    }
 
-        // For Ajax Check if deletion was successful
-        return true;
+    public function set_archived(int $client, int $note, bool $archived): bool
+    {
+        $where = ['client_id' => $client, 'client_note_id' => $note];
+        if ( ! $client || ! $note || ! $this->db->get_where($this->table, $where)->row()) {
+            return false;
+        }
+        $this->db->where($where);
+        if ($archived) {
+            $this->db->where('client_note_archived_at', null);
+        }
+
+        return $this->db->update($this->table, ['client_note_archived_at' => $archived ? gmdate('Y-m-d H:i:s') : null]);
     }
 }

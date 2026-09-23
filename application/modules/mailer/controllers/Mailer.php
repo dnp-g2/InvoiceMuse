@@ -163,6 +163,7 @@ class Mailer extends Admin_Controller
             return;
         }
 
+        property_require_publishable('invoice', (int)$invoice_id);
         $to   = $this->input->post('to_email', true);
         $from = $this->input->post('from_email', true);
 
@@ -213,6 +214,7 @@ class Mailer extends Admin_Controller
             return;
         }
 
+        property_require_publishable('quote', (int)$quote_id);
         $to   = $this->input->post('to_email');
         $from = $this->input->post('from_email');
 

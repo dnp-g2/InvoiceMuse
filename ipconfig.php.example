@@ -100,6 +100,26 @@ CUSTOM_INVOICE_TEMPLATES_PUBLIC=
 CUSTOM_QUOTE_TEMPLATES_PDF=
 CUSTOM_QUOTE_TEMPLATES_PUBLIC=
 
+# Public client information update form (/update) and its emails.
+# CLIENT_UPDATE_HOST is required in production: the form answers only on this host name.
+# Contact name reads as "<name> will review your request", e.g. "Ms. Smith" or "our office".
+# CLIENT_UPDATE_LOGO is a URL path such as /uploads/logo.png; leave empty for no logo.
+# CLIENT_UPDATE_EMAIL_FROM is used when the SMTP sender setting is empty.
+# CLIENT_UPDATE_EMAIL_TO and _COPY_TO receive new submissions for review.
+# CLIENT_UPDATE_REFERENCE_PREFIX starts each confirmation number (letters and digits, default REQ).
+# TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY enable the Cloudflare Turnstile check on the form.
+CLIENT_UPDATE_HOST=
+CLIENT_UPDATE_BUSINESS_NAME=
+CLIENT_UPDATE_CONTACT_NAME=
+CLIENT_UPDATE_CONTACT_PHONE=
+CLIENT_UPDATE_LOGO=
+CLIENT_UPDATE_EMAIL_FROM=
+CLIENT_UPDATE_EMAIL_TO=
+CLIENT_UPDATE_EMAIL_COPY_TO=
+CLIENT_UPDATE_REFERENCE_PREFIX=
+TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
+
 ##
 ## DO NOT CHANGE ANY CONFIGURATION VALUES BELOW THIS LINE!
 ## =======================================================

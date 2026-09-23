@@ -200,6 +200,7 @@ class Mdl_Invoices extends Response_Model
             }
         }
 
+        service_properties()->state('invoice', (int)$invoice_id);
         return $invoice_id;
     }
 
@@ -212,6 +213,7 @@ class Mdl_Invoices extends Response_Model
      */
     public function copy_invoice($source_id, $target_id, $copy_recurring_items_only = false): void
     {
+        service_properties()->begin_copy('invoice',(int)$source_id,'invoice',(int)$target_id);
         $this->load->model('invoices/mdl_items');
         $this->load->model('invoices/mdl_invoice_tax_rates');
 
@@ -252,7 +254,9 @@ class Mdl_Invoices extends Response_Model
             ];
 
             if ( ! $copy_recurring_items_only || $invoice_item->item_is_recurring) {
-                $this->mdl_items->save(null, $db_array, $global_discount);
+                $db_array += service_properties()->copy_fields('invoice', (int)$source_id, 'invoice', (int)$target_id, $invoice_item);
+            $copied_item_id = $this->mdl_items->save(null, $db_array, $global_discount);
+            service_properties()->verify_line('invoice', (int)$target_id, $copied_item_id, (object)$db_array);
             }
         }
 
@@ -280,6 +284,9 @@ class Mdl_Invoices extends Response_Model
         }
 
         $this->mdl_invoice_custom->save_custom($target_id, $form_data);
+        service_properties()->copy_billing('invoice', (int)$source_id, 'invoice', (int)$target_id);
+        service_properties()->finish('invoice', (int)$target_id, true);
+        service_properties()->release('invoice', (int)$source_id);
     }
 
     /**
@@ -290,6 +297,7 @@ class Mdl_Invoices extends Response_Model
      */
     public function copy_credit_invoice($source_id, $target_id)
     {
+        service_properties()->begin_copy('invoice',(int)$source_id,'invoice',(int)$target_id);
         $this->load->model('invoices/mdl_items');
         $this->load->model('invoices/mdl_invoice_tax_rates');
 
@@ -329,7 +337,9 @@ class Mdl_Invoices extends Response_Model
                 'item_product_unit_id' => $invoice_item->item_product_unit_id,
             ];
 
-            $this->mdl_items->save(null, $db_array, $global_discount);
+            $db_array += service_properties()->copy_fields('invoice', (int)$source_id, 'invoice', (int)$target_id, $invoice_item);
+            $copied_item_id = $this->mdl_items->save(null, $db_array, $global_discount);
+            service_properties()->verify_line('invoice', (int)$target_id, $copied_item_id, (object)$db_array);
         }
 
         $invoice_tax_rates = $this->mdl_invoice_tax_rates->where('invoice_id', $source_id)->get()->result();
@@ -355,6 +365,9 @@ class Mdl_Invoices extends Response_Model
         }
 
         $this->mdl_invoice_custom->save_custom($target_id, $form_data);
+        service_properties()->copy_billing('invoice', (int)$source_id, 'invoice', (int)$target_id);
+        service_properties()->finish('invoice', (int)$target_id, true);
+        service_properties()->release('invoice', (int)$source_id);
     }
 
     /**
@@ -564,10 +577,21 @@ class Mdl_Invoices extends Response_Model
         return $this;
     }
 
+    public static function collection_condition(bool $overdue = false): string
+    {
+        return "ip_invoices.invoice_status_id IN (2,3) AND ip_invoice_amounts.invoice_balance > 0 AND ip_invoice_amounts.invoice_sign = '1' AND COALESCE(ip_invoices.creditinvoice_parent_id,0) = 0"
+            . ($overdue ? ' AND ip_invoices.invoice_date_due < CURDATE()' : '');
+    }
+
+    public function is_unpaid()
+    {
+        $this->filter_where(self::collection_condition(), null, false);
+        return $this;
+    }
+
     public function is_overdue()
     {
-        $this->filter_having('is_overdue', 1);
-
+        $this->filter_where(self::collection_condition(true), null, false);
         return $this;
     }
 
@@ -611,6 +635,8 @@ class Mdl_Invoices extends Response_Model
      */
     public function mark_sent($invoice_id)
     {
+        property_require_publishable('invoice', (int)$invoice_id);
+        service_properties()->publish('invoice', (int)$invoice_id);
         $invoice = $this->get_by_id($invoice_id);
 
         if ( ! empty($invoice)) {

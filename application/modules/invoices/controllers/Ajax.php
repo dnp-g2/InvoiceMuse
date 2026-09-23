@@ -18,6 +18,12 @@ class Ajax extends Admin_Controller
 {
     public $ajax_controller = true;
 
+    public function __construct()
+    {
+        parent::__construct();
+        property_csrf_header();
+    }
+
     public function save()
     {
         $this->load->model([
@@ -25,14 +31,61 @@ class Ajax extends Admin_Controller
             'invoices/mdl_invoices',
             'units/mdl_units',
             'invoices/mdl_invoice_sumex',
+            'invoices/mdl_invoice_editor',
         ]);
 
         $invoice_id = $this->security->xss_clean($this->input->post('invoice_id', true));
 
+        $invoice = $this->mdl_invoices->get_by_id($invoice_id);
+        if (!$invoice) show_404();
+        $read_only = $invoice->is_read_only && !$this->config->item('disable_read_only');
         $this->mdl_invoices->set_id($invoice_id);
 
         if ($this->mdl_invoices->run_validation('validation_rules_save_invoice')) {
-            $items = json_decode($this->input->post('items'));
+            $custom_data = [];
+            if (!$read_only && $this->input->post('custom')) {
+                $values = [];
+                foreach ($this->input->post('custom') as $custom) {
+                    if (preg_match("/^(.*)\[\]$/i", $custom['name'], $matches)) {
+                        $values[$matches[1]][] = $custom['value'];
+                    } else {
+                        $values[$custom['name']] = $custom['value'];
+                    }
+                }
+
+                foreach ($values as $key => $value) {
+                    preg_match("/^custom\[(.*?)\](?:\[\]|)$/", $key, $matches);
+                    if ($matches) {
+                        $custom_data[$matches[1]] = $value;
+                    }
+                }
+
+                $this->load->model('custom_fields/mdl_invoice_custom');
+                $custom_validation = $this->mdl_invoice_custom->validate($custom_data);
+                if ($custom_validation !== true) {
+                    exit(json_encode(['success' => 0, 'validation_errors' => $custom_validation]));
+                }
+            }
+            $raw_items = $this->input->post('items');
+            $raw_deleted = $this->input->post('deleted_item_ids');
+            $items = is_string($raw_items) ? json_decode($raw_items) : null;
+            $deleted_ids = $raw_deleted === null ? [] : (is_string($raw_deleted) ? json_decode($raw_deleted, true) : null);
+            try {
+                if (!is_array($items) || !is_array($deleted_ids)) throw new InvalidArgumentException('Invalid line items.');
+                service_properties()->lock('invoice:' . (int)$invoice_id);
+                $invoice = $this->mdl_invoices->get_by_id($invoice_id);
+                $read_only = $invoice->is_read_only && !$this->config->item('disable_read_only');
+                $this->mdl_invoice_editor->validate($invoice, $items, $deleted_ids);
+                $number = $this->input->post('invoice_number');
+                if ($number !== null && $number !== '' && !preg_match('/^[a-zA-Z0-9\-_\/\.\s]+$/', $number)) {
+                    throw new InvalidArgumentException(trans('invoice_number') . ' ' . trans('contains_invalid_characters'));
+                }
+                if (!array_key_exists((int)$this->input->post('invoice_status_id'), $this->mdl_invoices->statuses())) {
+                    throw new InvalidArgumentException('Select a valid invoice status.');
+                }
+                $items = service_properties()->before_save('invoice', (int)$invoice_id, $items, (int)$this->input->post('property_revision'), (int)$this->input->post('invoice_status_id'), $this->input->post('property_refresh') === '1', $deleted_ids);
+                $this->mdl_invoice_editor->remove_lines((int)$invoice_id, $deleted_ids);
+            } catch (InvalidArgumentException|RuntimeException $e) { property_json_error($e); }
 
             $invoice_discount_percent = (float) $this->input->post('invoice_discount_percent');
             $invoice_discount_amount  = (float) $this->input->post('invoice_discount_amount');
@@ -66,7 +119,7 @@ class Ajax extends Admin_Controller
                 $this->config->set_item('legacy_calculation', ! empty($this->input->post('legacy_calculation')));
             }
 
-            foreach ($items as $item) {
+            foreach ($read_only ? [] : $items as $item) {
                 // Check if an item has either a quantity + price or name or description
                 if ( ! empty($item->item_name)) {
                     // Standardize item data
@@ -93,7 +146,8 @@ class Ajax extends Admin_Controller
                         $this->mdl_tasks->update_status(4, $item->item_task_id);
                     }
 
-                    $this->mdl_items->save($item_id, $item, $global_discount);
+                    $saved_item_id = $this->mdl_items->save($item_id, $item, $global_discount);
+                    try { service_properties()->verify_line('invoice', (int)$invoice_id, $saved_item_id, $item); } catch (RuntimeException $e) { property_json_error($e); }
                 } elseif (empty($item->item_name) && ( ! empty($item->item_quantity) || ! empty($item->item_price))) {
                     // Throw an error message and use the form validation for that (todo: where the translations of: The .* field is required.)
                     $this->load->library('form_validation');
@@ -159,6 +213,7 @@ class Ajax extends Admin_Controller
                 $db_array['is_read_only'] = 1;
             }
 
+            if ($read_only) $db_array = array_intersect_key($db_array, array_flip(['invoice_status_id', 'payment_method']));
             $this->mdl_invoices->save($invoice_id, $db_array);
 
             $sumexInvoice = $this->mdl_invoices->where('sumex_invoice', $invoice_id)->get()->num_rows();
@@ -178,8 +233,8 @@ class Ajax extends Admin_Controller
                 $this->mdl_invoice_sumex->save($invoice_id, $sumex_array);
             }
 
-            if (config_item('legacy_calculation')) {
-                // Recalculate for discounts
+            if (!$read_only) {
+                // Recalculate after all staged additions/removals, including an empty invoice.
                 $this->load->model('invoices/mdl_invoice_amounts');
                 $this->mdl_invoice_amounts->calculate($invoice_id, $global_discount);
             }
@@ -197,38 +252,14 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        // Save all custom fields
-        if ($this->input->post('custom')) {
-            $db_array = [];
-
-            $values = [];
-            foreach ($this->input->post('custom') as $custom) {
-                if (preg_match("/^(.*)\[\]$/i", $custom['name'], $matches)) {
-                    $values[$matches[1]][] = $custom['value'];
-                } else {
-                    $values[$custom['name']] = $custom['value'];
-                }
-            }
-
-            foreach ($values as $key => $value) {
-                preg_match("/^custom\[(.*?)\](?:\[\]|)$/", $key, $matches);
-                if ($matches) {
-                    $db_array[$matches[1]] = $value;
-                }
-            }
-
-            $this->load->model('custom_fields/mdl_invoice_custom');
-            $result = $this->mdl_invoice_custom->save_custom($invoice_id, $db_array);
+        if (!$read_only && !empty($response['success']) && $custom_data) {
+            $result = $this->mdl_invoice_custom->save_custom($invoice_id, $custom_data);
             if ($result !== true) {
-                $response = [
-                    'success'           => 0,
-                    'validation_errors' => $result,
-                ];
-
-                exit(json_encode($response));
+                exit(json_encode(['success' => 0, 'save_incomplete' => true, 'validation_errors' => $result]));
             }
         }
 
+        $response['property_revision'] = service_properties()->finish('invoice', (int)$invoice_id, !empty($response['success']));
         exit(json_encode($response));
     }
 
@@ -261,6 +292,7 @@ class Ajax extends Admin_Controller
         $success = 0;
         $item_id = $this->security->xss_clean($this->input->post('item_id'));
         $this->load->model('mdl_invoices');
+        try { service_properties()->delete_line('invoice', (int)$invoice_id, (int)$item_id, (int)$this->input->post('property_revision')); } catch (InvalidArgumentException|RuntimeException $e) { property_json_error($e); }
 
         // Only continue if the invoice exists or no item id was provided
         if ($this->mdl_invoices->get_by_id($invoice_id) || empty($item_id)) {
@@ -280,7 +312,7 @@ class Ajax extends Admin_Controller
         }
 
         // Return the response
-        exit(json_encode(['success' => $success]));
+        exit(json_encode(['success' => $success, 'property_revision' => service_properties()->finish('invoice', (int)$invoice_id, (bool)$success)]));
     }
 
     public function get_item()
@@ -426,11 +458,13 @@ class Ajax extends Admin_Controller
         if ( ! empty($client)) {
             $invoice_id = $this->security->xss_clean($this->input->post('invoice_id'));
 
+            try { service_properties()->change_client('invoice', (int)$invoice_id, (int)$client_id); } catch (InvalidArgumentException|RuntimeException $e) { property_json_error($e); }
             $db_array = [
                 'client_id' => $client_id,
             ];
             $this->db->where('invoice_id', $invoice_id);
             $this->db->update('ip_invoices', $db_array);
+            service_properties()->finish('invoice', (int)$invoice_id, true);
 
             $response = [
                 'success'    => 1,
@@ -454,9 +488,14 @@ class Ajax extends Admin_Controller
             'invoice_groups/mdl_invoice_groups',
             'tax_rates/mdl_tax_rates',
             'clients/mdl_clients',
+            'clients/mdl_client_quick_create',
         ]);
 
+        $this->load->helper('country');
+        property_csrf_header();
         $data = [
+            'quick_customer_request' => $this->mdl_client_quick_create->new_request(),
+            'quick_customer_countries' => get_country_list('en'),
             'invoice_groups' => $this->mdl_invoice_groups->get()->result(),
             'tax_rates'      => $this->mdl_tax_rates->get()->result(),
             'client'         => $this->mdl_clients->get_by_id($this->input->post('client_id')),
@@ -493,6 +532,8 @@ class Ajax extends Admin_Controller
         $this->load->model('invoices/mdl_invoices_recurring');
 
         if ($this->mdl_invoices_recurring->run_validation()) {
+            $issues=service_properties()->problems('invoice',(int)$this->input->post('invoice_id'),true);
+            if ($issues) property_json_error(new RuntimeException(implode(' ',$issues)));
             $this->mdl_invoices_recurring->save();
 
             $response = [

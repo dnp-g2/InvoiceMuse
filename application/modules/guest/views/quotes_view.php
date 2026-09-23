@@ -1,3 +1,4 @@
+<?php $property_render = property_prepare_render('quote', $quote, $items, false); ?>
 <?php
 $global_discount = $quote->quote_discount_percent > 0 ? format_amount($quote->quote_discount_percent) . '%' : format_currency($quote->quote_discount_amount);
 if ($quote_tax_rates) {
@@ -9,6 +10,7 @@ if ($quote_tax_rates) {
     $global_taxes = implode('<br>', $global_taxes);
 }
 ?>
+<?php if (!empty($quote->property_incomplete)) { ?><div style="padding:14px;border:3px solid #a00;color:#a00;font-size:20px">DRAFT — INCOMPLETE: assign all service properties and save before issuing.</div><?php } ?>
 <div id="headerbar">
     <h1 class="headerbar-title"><?php _trans('quote'); ?> #<?php echo htmlsc($quote->quote_number); ?></h1>
 
@@ -69,7 +71,7 @@ if (in_array($quote->quote_status_id, [2, 3])) {
             <div class="col-xs-12 col-md-9 clearfix">
                 <div class="pull-left">
 
-                    <h3><?php _htmlsc(format_client($quote)); ?></h3>
+                    <?php if ($property_render) { ?><strong>Bill To</strong><?php } ?><h3><?php _htmlsc(format_client($quote)); ?></h3>
                     <div class="client-address">
                         <?php $this->layout->load_view('clients/partial_client_address', ['client' => $quote]); ?>
                     </div>
@@ -122,7 +124,10 @@ if ($quote->client_email) {
                 </tr>
                 </thead>
 <?php
-foreach ($items as $i => $item) {
+$property_item_number=0;
+foreach (property_render_rows($items, $property_render) as $i => $item) {
+    if (property_special_row($item, 5)) continue;
+    $i=$property_item_number++;
     ?>
                 <tbody class="item">
                 <tr>

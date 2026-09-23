@@ -1,3 +1,4 @@
+<?php $property_render = property_prepare_render('quote', $quote, $items, false); ?>
 <!DOCTYPE html>
 <html lang="<?php _trans('cldr'); ?>">
 <head>
@@ -14,7 +15,7 @@
     <link rel="stylesheet" href="<?php _theme_asset('css/style.css'); ?>" type="text/css">
     <link rel="stylesheet" href="<?php _core_asset('css/custom.css'); ?>" type="text/css">
 </head>
-<body>
+<body><?php if (!empty($quote->property_incomplete)) { ?><div style="padding:14px;border:3px solid #a00;color:#a00;font-size:20px">DRAFT — INCOMPLETE: assign all service properties and save before issuing.</div><?php } ?>
 
 <div class="container">
 
@@ -115,7 +116,7 @@ if ($quote->user_fax) {
                 <div class="col-lg-2"></div>
                 <div class="col-xs-12 col-md-6 col-lg-5 text-right">
 
-                    <h4><?php _htmlsc($quote->client_name); ?></h4>
+                    <?php if ($property_render) { ?><strong>Bill To</strong><?php } ?><h4><?php _htmlsc($quote->client_name); ?></h4>
                     <p><?php
 if ($quote->client_vat_id) {
     _trans('vat_id_short');
@@ -189,7 +190,8 @@ if ($quote->client_phone) {
                         </thead>
                         <tbody>
                         <?php
-foreach ($items as $item) {
+foreach (property_render_rows($items, $property_render, true) as $item) {
+    if (property_special_row($item, ($show_item_discounts ? 6 : 5))) continue;
     ?>
                             <tr>
                                 <td><?php _htmlsc($item->item_name); ?></td>

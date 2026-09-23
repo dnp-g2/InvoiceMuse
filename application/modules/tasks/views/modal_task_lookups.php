@@ -43,6 +43,12 @@
                     // Set default tax rate id if empty
                     if (!items[key].tax_rate_id) items[key].tax_rate_id = '<?php echo $default_item_tax_rate; ?>';
 
+                    if (window.invoiceWorkspace && window.invoiceWorkspace.addLookupItem) {
+                        window.invoiceWorkspace.addLookupItem(items[key], 'task');
+                        $('#modal-choose-items').modal('hide');
+                        continue;
+                    }
+
                     if ($('#item_table .item:last input[name=item_name]').val() !== '') {
                         $('#new_row').clone().appendTo('#item_table').removeAttr('id').addClass('item').show();
                     }

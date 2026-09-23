@@ -22,6 +22,7 @@
                class="btn <?php echo $status == 'all' ? 'btn-primary' : 'btn-default' ?>">
                 <?php _trans('all'); ?>
             </a>
+            <a href="<?php echo site_url('invoices/status/unpaid'); ?>" class="btn <?php echo $status == 'unpaid' ? 'btn-primary' : 'btn-default'; ?>">Unpaid</a>
             <a href="<?php echo site_url('invoices/status/draft'); ?>"
                class="btn <?php echo $status == 'draft' ? 'btn-primary' : 'btn-default' ?>">
                 <?php _trans('draft'); ?>
@@ -60,7 +61,8 @@
                    class="btn <?php echo $status == 'all' ? 'btn-primary' : 'btn-default' ?>">
                     <?php _trans('all'); ?>
                 </a>
-                <a href="<?php echo site_url('invoices/status/draft'); ?>"
+                <a href="<?php echo site_url('invoices/status/unpaid'); ?>" class="btn <?php echo $status == 'unpaid' ? 'btn-primary' : 'btn-default'; ?>">Unpaid</a>
+            <a href="<?php echo site_url('invoices/status/draft'); ?>"
                    class="btn  <?php echo $status == 'draft' ? 'btn-primary' : 'btn-default' ?>">
                     <?php _trans('draft'); ?>
                 </a>

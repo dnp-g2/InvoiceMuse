@@ -122,7 +122,7 @@ class Mdl_Items extends Response_Model
     /**
      * @param int $item_id
      */
-    public function delete($item_id): bool
+    public function delete($item_id, bool $recalculate = true): bool
     {
         // Get item:
         // the invoice id is needed to recalculate invoice amounts
@@ -142,6 +142,8 @@ class Mdl_Items extends Response_Model
         // Delete the item amounts
         $this->db->where('item_id', $item_id);
         $this->db->delete('ip_invoice_item_amounts');
+
+        if (!$recalculate) return true;
 
         $this->load->model('invoices/mdl_invoice_amounts');
         $global_discount['item'] = $this->mdl_invoice_amounts->get_global_discount($invoice_id);

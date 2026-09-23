@@ -21,6 +21,11 @@ class Ajax extends Admin_Controller
     public function filter_invoices()
     {
         $this->load->model('invoices/mdl_invoices');
+        if ($this->input->post('filter_status') === 'unpaid') {
+            $this->mdl_invoices->is_unpaid();
+        } elseif ($this->input->post('filter_status') === 'overdue') {
+            $this->mdl_invoices->is_overdue();
+        }
 
         $query    = $this->input->post('filter_query');
         $keywords = explode(' ', $query);

@@ -53,3 +53,21 @@ defined('BASEPATH') || exit('No direct script access allowed');
 $route['default_controller']   = 'dashboard';
 $route['404_override']         = '';
 $route['translate_uri_dashes'] = false;
+
+// Public client information update form and protected review queue.
+$route['update']['get']                            = 'client_updates/update/index';
+$route['update']['post']                           = 'client_updates/update/index';
+$route['update/thank-you']['get']                  = 'client_updates/update/thank_you';
+$route['client-updates']['get']                    = 'client_updates/client_updates/index/pending';
+$route['client-updates/(pending|resolved)']['get'] = 'client_updates/client_updates/index/$1';
+$route['client-updates/view/(\d+)']['get']          = 'client_updates/client_updates/view/$1';
+$route['client-updates/resolve/(\d+)']['post']      = 'client_updates/client_updates/resolve/$1';
+$route['client-updates/apply/(\d+)']['post'] = 'client_updates/client_updates/apply/$1';
+$route['client-updates/dismiss/(\d+)']['post'] = 'client_updates/client_updates/dismiss/$1';
+$route['client-updates/reopen/(\d+)']['post']       = 'client_updates/client_updates/reopen/$1';
+
+$route['service-properties/client/(\d+)']['get'] = 'service_properties/service_properties/index/$1';
+$route['service-properties/client/(\d+)/save']['post'] = 'service_properties/service_properties/save/$1';
+$route['service-properties/preview/(invoice|quote)/(\d+)']['get'] = 'service_properties/service_properties/preview/$1/$2';
+
+$route['service-properties/client/(\d+)/status']['post'] = 'service_properties/service_properties/status/$1';

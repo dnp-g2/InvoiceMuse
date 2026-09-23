@@ -38,6 +38,53 @@ class Mdl_Clients extends Response_Model
         }
     }
 
+    /** Read-only directory query; independent of the global list-size setting. */
+    public function customer_list(string $status, string $query, int $size, int $offset): array
+    {
+        $hasProperties = $this->db->table_exists('ip_service_properties');
+        $counts = ['active' => 0, 'inactive' => 0, 'all' => 0];
+        foreach ($this->db->select('client_active, COUNT(*) AS total', false)->group_by('client_active')->get('ip_clients')->result() as $row) {
+            $counts[$row->client_active ? 'active' : 'inactive'] += (int) $row->total;
+            $counts['all'] += (int) $row->total;
+        }
+        $scope = function () use ($status, $query, $hasProperties) {
+            $this->db->from('ip_clients');
+            if ($status !== 'all') {
+                $this->db->where('client_active', $status === 'active' ? 1 : 0);
+            }
+            foreach (preg_split('/\s+/u', $query, -1, PREG_SPLIT_NO_EMPTY) as $word) {
+                $this->db->group_start();
+                $this->db->like("CONCAT_WS(' ',client_name,client_surname,client_company,client_email,client_phone,client_mobile,client_address_1,client_address_2,client_city,client_state,client_zip)", $word);
+                $digits = preg_replace('/[^0-9]/', '', $word);
+                if (strlen($digits) >= 3) {
+                    foreach (['client_phone', 'client_mobile'] as $field) {
+                        $this->db->or_like("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE($field,' ',''),'-',''),'(',''),')',''),'+','')", $digits);
+                    }
+                }
+                if ($hasProperties) {
+                    $pattern = $this->db->escape('%' . $this->db->escape_like_str($word) . '%');
+                    $this->db->or_where("EXISTS (SELECT 1 FROM ip_service_properties sp WHERE sp.client_id=ip_clients.client_id AND sp.active=1 AND CONCAT_WS(' ',sp.label,sp.address_1,sp.address_2,sp.city,sp.state,sp.zip) LIKE $pattern ESCAPE '!')", null, false);
+                }
+                $this->db->group_end();
+            }
+        };
+        $scope();
+        $total = (int) $this->db->count_all_results();
+        $offset = min((int) (floor($offset / $size) * $size), max(0, (int) (ceil($total / $size) - 1) * $size));
+        $scope();
+        $this->db->select('ip_clients.*');
+        $this->db->select('IFNULL((SELECT SUM(a.invoice_balance) FROM ip_invoice_amounts a JOIN ip_invoices i ON i.invoice_id=a.invoice_id WHERE i.client_id=ip_clients.client_id),0) AS client_invoice_balance', false);
+        $this->db->order_by(get_setting('sort_clients_by_surname') == '1' ? 'client_surname' : 'client_name');
+        $records = $this->db->order_by('client_id')->limit($size, $offset)->get()->result();
+        $properties = [];
+        if ($hasProperties && $records) {
+            foreach ($this->db->where_in('client_id', array_column($records, 'client_id'))->where('active', 1)->order_by('property_id')->get('ip_service_properties')->result() as $property) {
+                $properties[$property->client_id][] = $property;
+            }
+        }
+        return compact('status', 'query', 'size', 'offset', 'total', 'counts', 'records', 'properties');
+    }
+
     public function validation_rules()
     {
         return [

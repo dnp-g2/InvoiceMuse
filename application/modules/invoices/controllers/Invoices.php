@@ -40,6 +40,9 @@ class Invoices extends Admin_Controller
     {
         // Determine which group of invoices to load
         switch ($status) {
+            case 'unpaid':
+                $this->mdl_invoices->is_unpaid();
+                break;
             case 'draft':
                 $this->mdl_invoices->is_draft();
                 break;
@@ -67,6 +70,7 @@ class Invoices extends Admin_Controller
                 'filter_display'     => true,
                 'filter_placeholder' => trans('filter_invoices'),
                 'filter_method'      => 'filter_invoices',
+                'filter_status'      => in_array($status, ['unpaid', 'overdue'], true) ? $status : null,
                 'invoice_statuses'   => $this->mdl_invoices->statuses(),
             ]
         );

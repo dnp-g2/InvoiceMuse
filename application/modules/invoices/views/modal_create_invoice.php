@@ -1,17 +1,19 @@
 <script>
     $(function () {
+        if (typeof csrf_token_value !== 'undefined') { csrf_token_value = <?php echo json_encode($this->security->get_csrf_hash()); ?>; }
         // Display the create invoice modal
-        $('#create-invoice').modal('show');
+        $('#create-invoice').modal('show').attr({'aria-hidden':'false', 'aria-modal':'true'});
+        $('#create-invoice').on('hidden.bs.modal', function () { $(this).attr('aria-hidden', 'true').removeAttr('aria-modal'); });
 
         // Enable select2 for all selects
-        $('.simple-select').select2();
+        $('#create-invoice .simple-select').select2({dropdownParent: $('#create-invoice')});
 
-        <?php $this->layout->load_view('clients/script_select2_client_id.js'); ?>
+        <?php $this->layout->load_view('clients/script_select2_client_id.js', ['invoice_quick_customer' => true]); ?>
 
         // Creates the invoice
         $('#invoice_create_confirm').click(function () {
             // Posts the data to validate and create the invoice;
-            // will create the new client if necessar
+            // Customer creation is handled by the explicit quick-create step.
             $.post("<?php echo site_url('invoices/ajax/create'); ?>", {
                     client_id: $('#create_invoice_client_id').val(),
                     invoice_date_created: $('#invoice_date_created').val(),
@@ -41,13 +43,15 @@
 </script>
 
 <div id="create-invoice" class="modal modal-lg"
-     role="dialog" aria-labelledby="modal_create_invoice" aria-hidden="true">
-    <form class="modal-content">
+     role="dialog" tabindex="-1" aria-labelledby="modal_create_invoice" aria-hidden="true">
+    <form class="modal-content" novalidate>
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal"><i class="fa fa-close"></i></button>
-            <h4 class="panel-title"><?php _trans('create_invoice'); ?></h4>
+            <h4 class="panel-title" id="modal_create_invoice"><?php _trans('create_invoice'); ?></h4>
         </div>
         <div class="modal-body">
+            <div id="qc-confirmation" class="alert alert-success" role="status" style="display:none"></div>
+            <div id="invoice-start-fields">
 
             <input class="hidden" id="payment_method_id"
                    value="<?php echo html_escape(get_setting('invoice_default_payment_method')); ?>">
@@ -55,7 +59,7 @@
                    value="<?php echo html_escape(get_setting('enable_permissive_search_clients')); ?>">
 
             <div class="form-group has-feedback">
-                <label for="create_invoice_client_id"><?php _trans('client'); ?></label>
+                <div class="qc-customer-label"><label for="create_invoice_client_id">Customer</label><button type="button" class="btn btn-link btn-sm" id="qc-open">+ Create new customer</button></div>
                 <div class="input-group">
                     <span id="toggle_permissive_search_clients" class="input-group-addon" title="<?php _trans('enable_permissive_search_clients'); ?>" style="cursor:pointer;">
                         <i class="fa fa-toggle-<?php echo get_setting('enable_permissive_search_clients') ? 'on' : 'off' ?> fa-fw"></i>
@@ -106,19 +110,25 @@ foreach ($invoice_groups as $invoice_group) {
                 </select>
             </div>
 
+            </div><!-- invoice-start-fields -->
+            <?php $this->load->view('invoices/partial_quick_customer', compact('quick_customer_request', 'quick_customer_countries')); ?>
         </div>
-
         <div class="modal-footer">
-            <div class="btn-group">
+            <div class="btn-group qc-invoice-actions">
                 <button class="btn btn-success ajax-loader" id="invoice_create_confirm" type="button">
-                    <i class="fa fa-check"></i> <?php _trans('submit'); ?>
+                    <i class="fa fa-check"></i> Create draft invoice
                 </button>
                 <button class="btn btn-danger" type="button" data-dismiss="modal">
                     <i class="fa fa-times"></i> <?php _trans('cancel'); ?>
                 </button>
+            </div>
+            <div class="qc-customer-actions" style="display:none">
+                <button class="btn btn-default" type="button" id="qc-back">Back to invoice</button>
+                <button class="btn btn-success" type="button" id="qc-save">Save customer and continue</button>
             </div>
         </div>
 
     </form>
 
 </div>
+<?php $this->load->view('invoices/script_quick_customer'); ?>

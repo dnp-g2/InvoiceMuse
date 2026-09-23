@@ -1,3 +1,4 @@
+<?php $property_render = property_prepare_render('quote', $quote, $items, defined('PROPERTY_ADMIN_PREVIEW') && PROPERTY_ADMIN_PREVIEW); ?>
 <?php
 // Fix item table head when numerous (>= 12) items (overflowing in 2nd page)
 $add_table_and_head_for_sums = 1; // Set to 0/false/null/'', return to original IP
@@ -11,7 +12,7 @@ $colspan = $show_item_discounts ? 5 : 4;
     <link rel="stylesheet" href="<?php _theme_asset('css/templates.css'); ?>" type="text/css">
     <link rel="stylesheet" href="<?php _core_asset('css/custom-pdf.css'); ?>" type="text/css">
 </head>
-<body>
+<body><?php if (!empty($quote->property_incomplete)) { ?><div style="padding:14px;border:3px solid #a00;color:#a00;font-size:20px">DRAFT — INCOMPLETE: assign all service properties and save before issuing.</div><?php } ?>
 <header class="clearfix">
 
     <div id="logo">
@@ -20,7 +21,7 @@ $colspan = $show_item_discounts ? 5 : 4;
 
     <div id="client">
         <div>
-            <b><?php _htmlsc(format_client($quote)); ?></b>
+            <?php if ($property_render) { ?><strong>Bill To</strong><br><?php } ?><b><?php _htmlsc(format_client($quote)); ?></b>
         </div>
 <?php
 if ($quote->client_vat_id) {
@@ -146,7 +147,8 @@ if ($show_item_discounts) {
         <tbody>
 
 <?php
-foreach ($items as $item) {
+foreach (property_render_rows($items, $property_render) as $item) {
+    if (property_special_row($item, ($show_item_discounts ? 6 : 5))) continue;
     ?>
             <tr>
                 <td><?php _htmlsc($item->item_name); ?></td>

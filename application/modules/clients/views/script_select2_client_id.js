@@ -1,4 +1,7 @@
-$(".client-id-select").select2({
+$("<?php echo !empty($invoice_quick_customer) ? '#create_invoice_client_id' : '.client-id-select'; ?>").select2({
+<?php if (!empty($invoice_quick_customer)) { ?>
+    dropdownParent: $('#create-invoice'),
+<?php } ?>
     placeholder: "<?php _trans('client'); ?>",
     ajax: {
         url: "<?php echo site_url('clients/ajax/name_query'); ?>",

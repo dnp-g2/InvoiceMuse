@@ -70,6 +70,12 @@ class Cron extends Base_Controller
                 get_einvoice_usage($invoice, [], false);
             }
 
+            $property_issues = service_properties()->problems('invoice', (int)$source_id, true);
+            if ($property_issues) {
+                log_message('error', 'Recurring invoice '.(int)$source_id.': review service properties before generating another invoice.');
+                continue;
+            }
+
             // Create the new invoice
             $db_array = [
                 'client_id'                => $invoice->client_id,
@@ -97,6 +103,10 @@ class Cron extends Base_Controller
                 log_message('debug', '[Cron Recurring Invoices] Recurring Invoice with sourceId ' . $source_id . ' was copied to id ' . $target_id);
             }
 
+            if (service_properties()->problems('invoice',(int)$target_id,true)) {
+                log_message('error','Recurring invoice '.(int)$target_id.' is incomplete; schedule was not advanced.');
+                continue;
+            }
             // Update the next recur date for the recurring invoice
             $this->mdl_invoices_recurring->set_next_recur_date($invoice_recurring->invoice_recurring_id);
             if (IP_DEBUG) {

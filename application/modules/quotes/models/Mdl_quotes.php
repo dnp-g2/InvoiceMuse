@@ -176,6 +176,7 @@ class Mdl_Quotes extends Response_Model
             $this->db->insert('ip_quote_tax_rates', $db_array);
         }
 
+        service_properties()->state('quote', (int)$quote_id);
         return $quote_id;
     }
 
@@ -187,6 +188,7 @@ class Mdl_Quotes extends Response_Model
      */
     public function copy_quote($source_id, $target_id)
     {
+        service_properties()->begin_copy('quote',(int)$source_id,'quote',(int)$target_id);
         $this->load->model('quotes/mdl_quote_items');
 
         // Discounts calculation - since v1.6.3 Need if taxes applied after discounts
@@ -222,7 +224,9 @@ class Mdl_Quotes extends Response_Model
                 'item_product_unit_id' => $quote_item?->item_product_unit_id,
             ];
 
-            $this->mdl_quote_items->save(null, $db_array, $global_discount);
+            $db_array += service_properties()->copy_fields('quote', (int)$source_id, 'quote', (int)$target_id, $quote_item);
+            $copied_item_id = $this->mdl_quote_items->save(null, $db_array, $global_discount);
+            service_properties()->verify_line('quote', (int)$target_id, $copied_item_id, (object)$db_array);
         }
 
         $quote_tax_rates = $this->mdl_quote_tax_rates->where('quote_id', $source_id)->get()->result();
@@ -247,6 +251,9 @@ class Mdl_Quotes extends Response_Model
             $db_array['quote_id'] = $target_id;
             $this->mdl_quote_custom->save_custom($target_id, $db_array);
         }
+        service_properties()->copy_billing('quote', (int)$source_id, 'quote', (int)$target_id);
+        service_properties()->finish('quote', (int)$target_id, true);
+        service_properties()->release('quote', (int)$source_id);
     }
 
     /**
@@ -502,6 +509,8 @@ class Mdl_Quotes extends Response_Model
      */
     public function mark_sent($quote_id)
     {
+        property_require_publishable('quote', (int)$quote_id);
+        service_properties()->publish('quote', (int)$quote_id);
         $this->db->select('quote_status_id');
         $this->db->where('quote_id', $quote_id);
 

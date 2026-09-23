@@ -32,3 +32,8 @@ yarn-error.log
 /stan.txt
 /todo.txt
 /yarnpack.txt
+
+/.phpunit.cache/
+/application/controllers/Property_test.php
+
+/application/config/.service-properties-maintenance

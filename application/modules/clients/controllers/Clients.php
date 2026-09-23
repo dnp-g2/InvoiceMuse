@@ -39,13 +39,14 @@ class Clients extends Admin_Controller
      */
     public function status(string $status = 'active', $page = 0): void
     {
-        if (is_numeric(array_search($status, ['active', 'inactive'], true))) {
-            $function = 'is_' . $status;
-            $this->mdl_clients->{$function}();
-        }
-
-        $this->mdl_clients->with_total_balance()->paginate(site_url('clients/status/' . $status), $page);
-        $clients = $this->mdl_clients->result();
+        $status = in_array($status, ['active', 'inactive', 'all'], true) ? $status : 'active';
+        $query = $this->input->get('q');
+        $query = is_string($query) ? mb_substr(trim($query), 0, 250) : '';
+        $size = $this->input->get('per_page');
+        $size = is_string($size) && in_array($size, ['25', '50', '100'], true) ? (int) $size : 25;
+        $offset = is_scalar($page) && ctype_digit((string) $page) ? min((int) $page, 100000000) : 0;
+        $listing = $this->mdl_clients->customer_list($status, $query, $size, $offset);
+        $clients = $listing['records'];
 
         $req_einvoicing = get_setting('einvoicing');
         if ($req_einvoicing) {
@@ -63,9 +64,8 @@ class Clients extends Admin_Controller
         $this->layout->set(
             [
                 'records'            => $clients,
-                'filter_display'     => true,
-                'filter_placeholder' => trans('filter_clients'),
-                'filter_method'      => 'filter_clients',
+                'filter_display'     => false,
+                'listing'            => $listing,
                 'einvoicing'         => get_setting('einvoicing'),
             ]
         );
@@ -286,6 +286,9 @@ class Clients extends Admin_Controller
         $this->layout->set(
             [
                 'client'           => $client,
+                'properties'       => service_properties()->properties((int)$client_id),
+                'countries'        => get_country_list('en'),
+                'property_form_error' => null,
                 'client_notes'     => $this->mdl_client_notes->where('client_id', $client_id)->get()->result(),
                 'invoices'         => $this->mdl_invoices->result(),
                 'quotes'           => $this->mdl_quotes->result(),

@@ -1,394 +1,45 @@
-<div id="content">
-    <?php echo $this->layout->load_view('layout/alerts'); ?>
-
-    <div class="row<?php echo (get_setting('disable_quickactions') == 1) ? ' hidden' : ''; ?>">
-        <div class="col-xs-12">
-
-            <div id="panel-quick-actions" class="panel panel-default quick-actions">
-
-                <div class="panel-heading">
-                    <b><?php _trans('quick_actions'); ?></b>
-                </div>
-
-                <div class="btn-group btn-group-justified no-margin">
-                    <a href="<?php echo site_url('clients/form'); ?>" class="btn btn-default">
-                        <i class="fa fa-user fa-margin"></i>
-                        <span class="hidden-xs"><?php _trans('add_client'); ?></span>
-                    </a>
-                    <a href="javascript:void(0)" class="create-quote btn btn-default">
-                        <i class="fa fa-file fa-margin"></i>
-                        <span class="hidden-xs"><?php _trans('create_quote'); ?></span>
-                    </a>
-                    <a href="javascript:void(0)" class="create-invoice btn btn-default">
-                        <i class="fa fa-file-text fa-margin"></i>
-                        <span class="hidden-xs"><?php _trans('create_invoice'); ?></span>
-                    </a>
-                    <a href="<?php echo site_url('payments/form'); ?>" class="btn btn-default">
-                        <i class="fa fa-credit-card fa-margin"></i>
-                        <span class="hidden-xs"><?php _trans('enter_payment'); ?></span>
-                    </a>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xs-12 col-md-6">
-
-            <div id="panel-quote-overview" class="panel panel-default overview">
-
-                <div class="panel-heading">
-                    <b><i class="fa fa-bar-chart fa-margin"></i> <?php _trans('quote_overview'); ?></b>
-                    <span class="pull-right text-muted"><?php echo lang($quote_status_period); ?></span>
-                </div>
-
-                <table class="table table-hover table-bordered table-condensed no-margin">
 <?php
-foreach ($quote_status_totals as $total) {
-    ?>
-                    <tr>
-                        <td>
-                            <a href="<?php echo site_url($total['href']); ?>">
-                                <?php echo $total['label']; ?>
-                            </a>
-                        </td>
-                        <td class="amount">
-                            <span class="<?php echo $total['class']; ?>">
-                                <?php echo format_currency($total['sum_total']); ?>
-                            </span>
-                        </td>
-                    </tr>
-<?php
-}
-    ?>
-                </table>
-            </div>
-
-        </div>
-        <div class="col-xs-12 col-md-6">
-
-            <div id="panel-invoice-overview" class="panel panel-default overview">
-
-                <div class="panel-heading">
-                    <b><i class="fa fa-bar-chart fa-margin"></i> <?php _trans('invoice_overview'); ?></b>
-                    <span class="pull-right text-muted"><?php echo lang($invoice_status_period); ?></span>
-                </div>
-
-                <table class="table table-hover table-bordered table-condensed no-margin">
-<?php
-foreach ($invoice_status_totals as $total) {
-    ?>
-                    <tr>
-                        <td>
-                            <a href="<?php echo site_url($total['href']); ?>">
-                                <?php echo $total['label']; ?>
-                            </a>
-                        </td>
-                        <td class="amount">
-                            <span class="<?php echo $total['class']; ?>">
-                                <?php echo format_currency($total['sum_total']); ?>
-                            </span>
-                        </td>
-                    </tr>
-<?php
-}
-    ?>
-                </table>
-            </div>
-<?php
-if (empty($overdue_invoices)) {
-    ?>
-            <div class="panel panel-default panel-heading">
-                <span class="text-muted"><?php _trans('no_overdue_invoices'); ?></span>
-            </div>
-<?php
-} else {
-    $overdue_invoices_total = 0;
-    foreach ($overdue_invoices as $invoice) {
-        $overdue_invoices_total += $invoice->invoice_balance;
-    }
-    ?>
-            <div class="panel panel-danger panel-heading">
-                <?php echo anchor('invoices/status/overdue', '<i class="fa fa-external-link"></i> ' . trans('overdue_invoices'), 'class="text-danger"'); ?>
-                <span class="pull-right text-danger">
-                    <?php echo format_currency($overdue_invoices_total); ?>
-                </span>
-            </div>
-<?php
-}
-    ?>
-
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xs-12 col-md-6">
-
-            <div id="panel-recent-quotes" class="panel panel-default">
-
-                <div class="panel-heading">
-                    <b><i class="fa fa-history fa-margin"></i> <?php _trans('recent_quotes'); ?></b>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped table-condensed no-margin">
-                        <thead>
-                        <tr>
-                            <th><?php _trans('status'); ?></th>
-                            <th style="min-width: 15%;"><?php _trans('date'); ?></th>
-                            <th style="min-width: 15%;"><?php _trans('quote'); ?></th>
-                            <th style="min-width: 35%;"><?php _trans('client'); ?></th>
-                            <th class="amount"><?php _trans('balance'); ?></th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-<?php
-foreach ($quotes as $quote) {
-    ?>
-                            <tr>
-                                <td>
-                                <span class="label
-                                <?php echo $quote_statuses[$quote->quote_status_id]['class']; ?>">
-                                    <?php echo $quote_statuses[$quote->quote_status_id]['label']; ?>
-                                </span>
-                                </td>
-                                <td>
-                                    <?php echo date_from_mysql($quote->quote_date_created); ?>
-                                </td>
-                                <td>
-                                    <?php echo anchor('quotes/view/' . $quote->quote_id, ($quote->quote_number ? htmlsc($quote->quote_number) : $quote->quote_id)); ?>
-                                </td>
-                                <td>
-                                    <?php echo anchor('clients/view/' . $quote->client_id, htmlsc(format_client($quote))); ?>
-                                </td>
-                                <td class="amount">
-                                    <?php echo format_currency($quote->quote_total); ?>
-                                </td>
-                                <td style="text-align: center;">
-                                    <a href="<?php echo site_url('quotes/generate_pdf/' . $quote->quote_id); ?>"
-                                       target="_blank" title="<?php _trans('download_pdf'); ?>">
-                                        <i class="fa fa-file-pdf-o"></i>
-                                    </a>
-                                </td>
-                            </tr>
-<?php
-}
-    ?>
-                        <tr>
-                            <td colspan="6" class="text-right small">
-                                <?php echo anchor('quotes/status/all', trans('view_all')); ?>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </div>
-        <div class="col-xs-12 col-md-6">
-
-            <div id="panel-recent-invoices" class="panel panel-default">
-
-                <div class="panel-heading">
-                    <b><i class="fa fa-history fa-margin"></i> <?php _trans('recent_invoices'); ?></b>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped table-condensed no-margin">
-                        <thead>
-                        <tr>
-                            <th><?php _trans('status'); ?></th>
-                            <th style="min-width: 15%;"><?php _trans('due_date'); ?></th>
-                            <th style="min-width: 15%;"><?php _trans('invoice'); ?></th>
-                            <th style="min-width: 35%;"><?php _trans('client'); ?></th>
-                            <th class="amount"><?php _trans('balance'); ?></th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-
-<?php
-foreach ($invoices as $invoice) {
-    if ($this->config->item('disable_read_only') == true) {
-        $invoice->is_read_only = 0;
-    }
-    ?>
-                            <tr>
-                                <td>
-                                    <span class="label <?php echo $invoice_statuses[$invoice->invoice_status_id]['class']; ?>">
-                                        <?php echo $invoice_statuses[$invoice->invoice_status_id]['label'];
-    if ($invoice->invoice_sign == '-1') { ?>&nbsp;<i class="fa fa-credit-invoice" title="<?php _trans('credit_invoice') ?>"></i><?php }
-    if ($invoice->is_read_only) { ?>&nbsp;<i class="fa fa-read-only" title="<?php _trans('read_only') ?>"></i><?php }
-    if ($invoice->invoice_is_recurring) { ?>&nbsp;<i class="fa fa-refresh" title="<?php _trans('recurring') ?>"></i><?php }
-    ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="<?php echo ($invoice->is_overdue) ? 'font-overdue' : '' ?>">
-                                        <?php echo date_from_mysql($invoice->invoice_date_due); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php echo anchor('invoices/view/' . $invoice->invoice_id, ($invoice->invoice_number ? htmlsc($invoice->invoice_number) : $invoice->invoice_id)); ?>
-                                </td>
-                                <td>
-                                    <?php echo anchor('clients/view/' . $invoice->client_id, htmlsc(format_client($invoice))); ?>
-                                </td>
-                                <td class="amount">
-                                    <?php echo format_currency($invoice->invoice_balance * $invoice->invoice_sign); ?>
-                                </td>
-                                <td style="text-align: center;">
-<?php
-    if ($invoice->sumex_id != null) {
-        ?>
-                                    <a href="<?php echo site_url('invoices/generate_sumex_pdf/' . $invoice->invoice_id); ?>"
-                                       target="_blank" title="<?php _trans('generate_sumex'); ?>">
-                                        <i class="fa fa-file-pdf-o"></i>
-                                    </a>
-<?php
-    } else {
-        ?>
-                                    <a href="<?php echo site_url('invoices/generate_pdf/' . $invoice->invoice_id); ?>"
-                                       target="_blank" title="<?php _trans('download_pdf'); ?>">
-                                        <i class="fa fa-file-pdf-o"></i>
-                                    </a>
-<?php
-    }
-    ?>
-                                </td>
-                            </tr>
-<?php
-}
-    ?>
-                        <tr>
-                            <td colspan="6" class="text-right small">
-                                <?php echo anchor('invoices/status/all', trans('view_all')); ?>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-<?php
-if (get_setting('projects_enabled') == 1) {
-    ?>
-        <div class="row">
-            <div class="col-xs-12 col-md-6">
-
-                <div id="panel-projects" class="panel panel-default">
-
-                    <div class="panel-heading">
-                        <b><i class="fa fa-list fa-margin"></i> <?php _trans('projects'); ?></b>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped table-condensed no-margin">
-                            <thead>
-                            <tr>
-                                <th><?php _trans('project_name'); ?></th>
-                                <th><?php _trans('client_name'); ?></th>
-                            </tr>
-                            </thead>
-
-                            <tbody>
-<?php
-        foreach ($projects as $project) {
-            ?>
-                                <tr>
-                                    <td>
-                                        <?php echo anchor('projects/view/' . $project->project_id, htmlsc($project->project_name)); ?>
-                                    </td>
-                                    <td>
-                                        <?php if ($project->client_id != null) : ?>
-                                            <?php echo anchor('clients/view/' . $project->client_id, htmlsc(format_client($project))); ?>
-                                        <?php else : ?>
-                                            -
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-<?php
-        }
-    ?>
-                                <tr>
-                                    <td colspan="6" class="text-right small">
-                                        <?php echo anchor('projects/index', trans('view_all')); ?>
-                                    </td>
-                                </tr>
-                            </tbody>
-
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-            <div class="col-xs-12 col-md-6">
-
-                <div id="panel-recent-invoices" class="panel panel-default">
-
-                    <div class="panel-heading">
-                        <b><i class="fa fa-check-square-o fa-margin"></i> <?php _trans('tasks'); ?></b>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped table-condensed no-margin">
-
-                            <thead>
-                            <tr>
-                                <th><?php _trans('status'); ?></th>
-                                <th><?php _trans('task_name'); ?></th>
-                                <th><?php _trans('task_finish_date'); ?></th>
-                                <th><?php _trans('project'); ?></th>
-                            </tr>
-                            </thead>
-
-                            <tbody>
-<?php
-        foreach ($tasks as $task) {
-            ?>
-                                <tr>
-                                    <td>
-                                    <span class="label <?php echo $task_statuses[$task->task_status]['class'] ?? '' ?>">
-                                        <?php if (isset($task_statuses[$task->task_status]['label'])) {
-                                            echo $task_statuses[$task->task_status]['label'];
-                                        } ?>
-                                    </span>
-                                    </td>
-                                    <td>
-                                        <?php echo anchor('tasks/form/' . $task->task_id, htmlsc($task->task_name)) ?>
-                                    </td>
-                                    <td>
-                                    <span class="<?php echo ($task->is_overdue) ? 'font-overdue' : ''; ?>">
-                                        <?php echo date_from_mysql($task->task_finish_date); ?>
-                                    </span>
-                                    </td>
-                                    <td>
-                                        <?php echo empty($task->project_id) ? '' : anchor('projects/view/' . $task->project_id, htmlsc($task->project_name)); ?>
-                                    </td>
-                                </tr>
-<?php
-        }
-    ?>
-                                <tr>
-                                    <td colspan="6" class="text-right small">
-                                        <?php echo anchor('tasks/index', trans('view_all')); ?>
-                                    </td>
-                                </tr>
-                            </tbody>
-
-                        </table>
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-<?php
-} // End if projects_enabled
-    ?>
-
-</div>
+$dashboardDate = static function ($date) { return !$date || substr($date, 0, 10) === '0000-00-00' ? 'Not set' : date_from_mysql($date); };
+?>
+<style>
+.work-dashboard{max-width:1320px;margin:auto;padding:24px;color:#303a43}.work-dashboard h2{font-size:28px;margin:0 0 8px}.work-dashboard h3{font-size:20px;margin:0 0 16px}.work-dashboard h4{font-size:16px;margin:0 0 10px}.dash-muted{color:#5f6971}.dash-intro{margin-bottom:24px}.dash-panel{border:1px solid #dce2e6;border-radius:8px;padding:20px;background:#fff;margin-bottom:24px}.dash-search{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}.dash-search-field{flex:1;min-width:240px}.dash-search label{display:block;font-size:17px;margin-bottom:8px}.dash-search input{height:42px}.dash-search .btn{min-height:42px}.dash-customer-link{display:inline-block;padding:11px 0}.dash-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:26px}.dash-action{border:1px solid #d0dce5;border-radius:7px;padding:17px;background:#fff;color:#245d85;text-align:left;white-space:normal}.dash-action:hover{background:#edf5fc;text-decoration:none}.dash-action strong{display:block;font-size:16px;margin-bottom:5px}.dash-action span{font-size:13px;color:#5f6971}.dash-action.primary{border-color:#2f80b7;background:#edf6fc}.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:26px}.dash-card{border:1px solid #dce2e6;border-radius:8px;padding:20px;background:#fff;display:flex;flex-direction:column;align-items:flex-start}.dash-card.attention{border-top:3px solid #b37a25}.dash-card .dash-number{font-size:30px;font-weight:600;line-height:1.25;margin-bottom:8px}.dash-card p{margin:0 0 12px}.dash-card .btn{margin-top:auto}.dash-money .dash-card{background:#f5f8fa}.dash-money h4{font-weight:normal;color:#475866}.dash-money .dash-number{font-size:27px}.dash-money a{margin-top:auto}.dash-section-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px}.dash-section-heading h3{margin:0}.dash-table{width:100%;table-layout:fixed}.dash-table th{font-size:12px;color:#52616d;background:#f3f6f8;text-align:left;padding:12px}.dash-table td{padding:14px 12px;border-bottom:1px solid #e3e8eb;vertical-align:top;overflow-wrap:anywhere}.dash-table td small{display:block;margin-top:5px}.dash-status{display:inline-block;background:#edf2f6;border-radius:12px;padding:3px 9px;font-size:12px;color:#425767}.dash-status.paid{background:#edf5ee;color:#275b34}.dash-status.draft{background:#f1f1f1;color:#555}.dash-total{white-space:nowrap;font-weight:600}.dash-empty{padding:14px 0;color:#5f6971}.dash-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px}.dash-more summary{font-size:19px;font-weight:600;cursor:pointer}.dash-more summary span{font-size:14px;font-weight:normal;color:#5f6971;margin-left:8px}.dash-more summary:after{content:"Show details ▾";float:right;font-size:13px;font-weight:normal;color:#245d85}.dash-more[open] summary:after{content:"Hide details ▴"}.dash-more[open] summary{margin-bottom:20px}.dash-mini-list{list-style:none;padding:0;margin:0}.dash-mini-list li{padding:14px 0;border-bottom:1px solid #e3e8eb;display:flex;justify-content:space-between;gap:15px}.dash-mini-list small{display:block;color:#5f6971;margin-top:5px}.work-dashboard a:focus-visible,.work-dashboard button:focus-visible,.work-dashboard summary:focus-visible,.work-dashboard input:focus-visible{outline:3px solid #215f93;outline-offset:3px}
+@media(max-width:900px){.dash-actions{grid-template-columns:repeat(2,1fr)}.dash-card{padding:16px}.dash-table td,.dash-table th{padding:10px 7px}}
+@media(max-width:700px){.work-dashboard{padding:14px}.dash-panel{padding:16px}.dash-grid{grid-template-columns:1fr;gap:12px}.dash-card .dash-number{font-size:26px}.dash-search-field{min-width:100%}.dash-customer-link{width:100%}.dash-table,.dash-table tbody,.dash-table tr,.dash-table td{display:block;width:100%}.dash-table thead{display:none}.dash-table tr{padding:12px 0;border-bottom:1px solid #dce2e6}.dash-table td{border:0;padding:6px 0}.dash-table td:before{content:attr(data-label);display:block;color:#5f6971;font-size:12px;margin-bottom:3px}.dash-mini-list li{flex-direction:column;gap:8px}.work-dashboard .btn{min-height:42px}.dash-actions{gap:10px}.dash-action{padding:14px}.dash-action strong{font-size:15px}.dash-section-heading{align-items:flex-start}}
+</style>
+<div id="headerbar"><h1 class="headerbar-title">Dashboard</h1></div>
+<div id="content" class="no-padding"><main class="work-dashboard">
+<?php $this->layout->load_view('layout/alerts'); ?>
+<header class="dash-intro"><h2>Your work at a glance</h2><p class="dash-muted">Find a customer, start a task, or see what needs your attention.</p></header>
+<section class="dash-panel" aria-label="Find a customer"><form class="dash-search" method="get" action="<?php echo site_url('clients/status/active'); ?>"><div class="dash-search-field"><label for="dashboard-customer-search">Find a customer</label><input id="dashboard-customer-search" class="form-control" type="search" name="q" maxlength="250" placeholder="Name, email, phone, or address"></div><button class="btn btn-primary" type="submit">Search customers</button><a class="dash-customer-link" href="<?php echo site_url('clients/status/active'); ?>">View all active customers (<?php echo $active_customers; ?>)</a></form></section>
+<?php if (get_setting('disable_quickactions') != 1) { ?>
+<nav class="dash-actions" aria-label="Everyday actions">
+<a href="#" class="dash-action primary create-invoice"><strong>Create invoice</strong><span>Prepare a bill for a customer</span></a>
+<a href="<?php echo site_url('payments/form'); ?>" class="dash-action"><strong>Record payment</strong><span>Enter money already received</span></a>
+<a href="<?php echo site_url('clients/form'); ?>" class="dash-action"><strong>Add customer</strong><span>Set up a customer account</span></a>
+<a href="#" class="dash-action create-quote"><strong>Create quote</strong><span>Prepare a price estimate</span></a>
+</nav><?php } ?>
+<section aria-labelledby="dashboard-attention"><h3 id="dashboard-attention">Needs attention</h3><div class="dash-grid">
+<div class="dash-card <?php echo $pending_updates?'attention':''; ?>" data-dashboard="updates"><h4>Customer information to review</h4><span class="dash-number"><?php echo $pending_updates; ?></span><p class="dash-muted"><?php echo !$updates_available?'Customer submissions are not enabled.':($pending_updates?'New submissions waiting for review.':'Nothing waiting. Customer submissions are up to date.'); ?></p><?php if ($updates_available) { ?><a class="btn btn-default" href="<?php echo site_url('client-updates'); ?>">Review submissions</a><?php } ?></div>
+<div class="dash-card <?php echo $totals->overdue_count?'attention':''; ?>" data-dashboard="overdue"><h4>Overdue invoices</h4><span class="dash-number"><?php echo (int)$totals->overdue_count; ?></span><p><?php echo format_currency($totals->overdue_amount); ?> outstanding</p><p class="dash-muted"><?php echo $totals->overdue_count?'Sent invoices with a payment past its due date.':'Nothing waiting. No overdue invoice balances.'; ?></p><a class="btn btn-default" href="<?php echo site_url('invoices/status/overdue'); ?>">Review overdue invoices</a></div>
+<div class="dash-card" data-dashboard="drafts"><h4>Draft invoices</h4><span class="dash-number"><?php echo (int)$totals->draft_count; ?></span><p class="dash-muted"><?php echo $totals->draft_count?'Not sent yet. Review these before sending.':'Nothing waiting. No draft invoices to finish.'; ?></p><a class="btn btn-default" href="<?php echo site_url('invoices/status/draft'); ?>">Review drafts</a></div>
+</div></section>
+<section class="dash-money" aria-labelledby="dashboard-money"><h3 id="dashboard-money">Money at a glance</h3><div class="dash-grid">
+<div class="dash-card" data-dashboard="unpaid"><h4>Unpaid invoices</h4><span class="dash-number"><?php echo format_currency($totals->unpaid_amount); ?></span><p class="dash-muted"><?php echo (int)$totals->unpaid_count; ?> issued invoice<?php echo (int)$totals->unpaid_count===1?'':'s'; ?> with money still due. Excludes unsent drafts and credit invoices.</p><a href="<?php echo site_url('invoices/status/unpaid'); ?>">View unpaid invoices</a></div>
+<div class="dash-card"><h4>Of that, overdue</h4><span class="dash-number"><?php echo format_currency($totals->overdue_amount); ?></span><p class="dash-muted">Already included in the unpaid amount. Due dates have passed.</p><a href="<?php echo site_url('invoices/status/overdue'); ?>">View overdue invoices</a></div>
+<div class="dash-card" data-dashboard="receipts"><h4>Payments received this month</h4><span class="dash-number"><?php echo format_currency($payments_received); ?></span><p class="dash-muted"><?php echo html_escape($payment_month); ?> · Based on recorded payment dates, including any negative adjustments.</p><a href="<?php echo site_url('payments'); ?>">View all payments</a></div>
+</div></section>
+<section class="dash-panel" aria-labelledby="dashboard-recent"><div class="dash-section-heading"><h3 id="dashboard-recent">Recent invoices</h3><a href="<?php echo site_url('invoices/status/all'); ?>">View all invoices</a></div>
+<?php if (!$invoices) { ?><p class="dash-empty">No invoices yet. Create an invoice when you are ready to bill a customer.</p><?php } else { ?>
+<table class="dash-table"><caption class="sr-only">Recent invoices</caption><thead><tr><th style="width:24%">Customer</th><th style="width:12%">Invoice</th><th style="width:17%">Status</th><th style="width:15%">Due date</th><th style="width:16%">Remaining balance</th><th style="width:16%">Action</th></tr></thead><tbody>
+<?php foreach ($invoices as $invoice) { ?>
+<tr><td data-label="Customer"><a href="<?php echo site_url('clients/view/' . (int)$invoice->client_id); ?>"><?php _htmlsc(format_client($invoice)); ?></a></td><td data-label="Invoice"><?php _htmlsc($invoice->invoice_number ?: $invoice->invoice_id); ?></td><td data-label="Status"><span class="dash-status <?php echo (int)$invoice->invoice_status_id===1?'draft':((int)$invoice->invoice_status_id===4?'paid':''); ?>"><?php echo html_escape($invoice_statuses[$invoice->invoice_status_id]['label']??'Unknown'); ?></span><?php if($invoice->invoice_sign==='-1'){ ?><small>Credit invoice</small><?php } if($invoice->invoice_is_recurring){ ?><small>Recurring</small><?php } if($invoice->is_read_only && !$this->config->item('disable_read_only')){ ?><small>Read-only</small><?php } ?></td><td data-label="Due date"><?php echo html_escape($dashboardDate($invoice->invoice_date_due)); ?></td><td data-label="Remaining balance"><span class="dash-total"><?php echo format_currency($invoice->invoice_balance * $invoice->invoice_sign); ?></span><?php if((int)$invoice->invoice_status_id===1){ ?><small class="dash-muted">Draft — not sent</small><?php } ?></td><td data-label="Action"><a class="btn btn-default btn-sm" href="<?php echo site_url('invoices/view/' . (int)$invoice->invoice_id); ?>">View invoice</a></td></tr>
+<?php } ?></tbody></table><?php } ?>
+<div class="dash-foot"><span class="dash-muted">Showing the latest <?php echo count($invoices); ?> of <?php echo (int)$totals->invoice_count; ?> invoices</span><a href="<?php echo site_url('invoices/status/all'); ?>">View all invoices</a></div>
+</section>
+<details class="dash-panel dash-more"><summary>Quotes <span><?php echo $quote_count; ?> total</span></summary>
+<?php if (!$quotes) { ?><p class="dash-empty">No quotes yet. Create a quote when a customer needs a price estimate.</p><?php } else { ?><ul class="dash-mini-list"><?php foreach($quotes as $quote){ ?><li><div><a href="<?php echo site_url('quotes/view/' . (int)$quote->quote_id); ?>">Quote <?php _htmlsc($quote->quote_number ?: $quote->quote_id); ?> · <?php _htmlsc(format_client($quote)); ?></a><small><?php echo html_escape($quote_statuses[$quote->quote_status_id]['label']??'Unknown'); ?> · <?php echo html_escape($dashboardDate($quote->quote_date_created)); ?></small></div><strong><?php echo format_currency($quote->quote_total); ?></strong></li><?php } ?></ul><?php } ?><div class="dash-foot"><span class="dash-muted">Showing the latest <?php echo count($quotes); ?> of <?php echo $quote_count; ?> quotes</span><a href="<?php echo site_url('quotes/status/all'); ?>">View all quotes</a></div></details>
+<?php if ($projects_enabled) { ?>
+<details class="dash-panel dash-more"><summary>Tasks <span><?php echo $task_count; ?> total</span></summary><?php if(!$tasks){ ?><p class="dash-empty">No tasks added yet.</p><?php } else { ?><ul class="dash-mini-list"><?php foreach($tasks as $task){ ?><li><div><a href="<?php echo site_url('tasks/form/' . (int)$task->task_id); ?>"><?php _htmlsc($task->task_name); ?></a><small><?php echo html_escape($task_statuses[$task->task_status]['label']??'Unknown'); ?> · Finish date: <?php echo html_escape($dashboardDate($task->task_finish_date)); ?></small><?php if($task->project_name){ ?><small><?php _htmlsc($task->project_name); ?></small><?php } ?></div></li><?php } ?></ul><?php } ?><div class="dash-foot"><span class="dash-muted">Showing the latest <?php echo count($tasks); ?> of <?php echo $task_count; ?> tasks</span><a href="<?php echo site_url('tasks'); ?>">View all tasks</a></div></details>
+<details class="dash-panel dash-more"><summary>Projects <span><?php echo $project_count; ?> total</span></summary><?php if(!$projects){ ?><p class="dash-empty">No projects added yet.</p><?php } else { ?><ul class="dash-mini-list"><?php foreach($projects as $project){ ?><li><div><a href="<?php echo site_url('projects/view/' . (int)$project->project_id); ?>"><?php _htmlsc($project->project_name); ?></a><?php if($project->client_id){ ?><small><?php _htmlsc(format_client($project)); ?></small><?php } ?></div></li><?php } ?></ul><?php } ?><div class="dash-foot"><span class="dash-muted">Showing the latest <?php echo count($projects); ?> of <?php echo $project_count; ?> projects</span><a href="<?php echo site_url('projects'); ?>">View all projects</a></div></details>
+<?php } ?>
+</main></div>

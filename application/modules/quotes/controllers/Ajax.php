@@ -18,6 +18,12 @@ class Ajax extends Admin_Controller
 {
     public $ajax_controller = true;
 
+    public function __construct()
+    {
+        parent::__construct();
+        property_csrf_header();
+    }
+
     public function save()
     {
         $this->load->model([
@@ -32,6 +38,10 @@ class Ajax extends Admin_Controller
 
         if ($this->mdl_quotes->run_validation('validation_rules_save_quote')) {
             $items = json_decode($this->input->post('items'));
+            try {
+                if (!is_array($items)) throw new InvalidArgumentException('Invalid line items.');
+                $items = service_properties()->before_save('quote', (int)$quote_id, $items, (int)$this->input->post('property_revision'), (int)$this->input->post('quote_status_id'), $this->input->post('property_refresh') === '1');
+            } catch (InvalidArgumentException|RuntimeException $e) { property_json_error($e); }
 
             $quote_discount_percent = (float) $this->input->post('quote_discount_percent');
             $quote_discount_amount  = (float) $this->input->post('quote_discount_amount');
@@ -79,7 +89,8 @@ class Ajax extends Admin_Controller
                     $item_id = ($item->item_id) ?: null;
                     unset($item->item_id);
 
-                    $this->mdl_quote_items->save($item_id, $item, $global_discount);
+                    $saved_item_id = $this->mdl_quote_items->save($item_id, $item, $global_discount);
+                    try { service_properties()->verify_line('quote', (int)$quote_id, $saved_item_id, $item); } catch (RuntimeException $e) { property_json_error($e); }
                 } elseif (empty($item->item_name) && ( ! empty($item->item_quantity) || ! empty($item->item_price))) {
                     // Throw an error message and use the form validation for that (todo: where the translations of: The .* field is required.)
                     $this->load->library('form_validation');
@@ -177,6 +188,7 @@ class Ajax extends Admin_Controller
             }
         }
 
+        $response['property_revision'] = service_properties()->finish('quote', (int)$quote_id, !empty($response['success']));
         exit(json_encode($response));
     }
 
@@ -209,6 +221,7 @@ class Ajax extends Admin_Controller
         $success = 0;
         $item_id = $this->input->post('item_id');
         $this->load->model('mdl_quotes');
+        try { service_properties()->delete_line('quote', (int)$quote_id, (int)$item_id, (int)$this->input->post('property_revision')); } catch (InvalidArgumentException|RuntimeException $e) { property_json_error($e); }
 
         // Only continue if the quote exists or no item id was provided
         if ($this->mdl_quotes->get_by_id($quote_id) || empty($item_id)) {
@@ -223,7 +236,7 @@ class Ajax extends Admin_Controller
         }
 
         // Return the response
-        exit(json_encode(['success' => $success]));
+        exit(json_encode(['success' => $success, 'property_revision' => service_properties()->finish('quote', (int)$quote_id, (bool)$success)]));
     }
 
     public function get_item()
@@ -368,11 +381,13 @@ class Ajax extends Admin_Controller
         if ( ! empty($client)) {
             $quote_id = $this->input->post('quote_id');
 
+            try { service_properties()->change_client('quote', (int)$quote_id, (int)$client_id); } catch (InvalidArgumentException|RuntimeException $e) { property_json_error($e); }
             $db_array = [
                 'client_id' => $client_id,
             ];
             $this->db->where('quote_id', $quote_id);
             $this->db->update('ip_quotes', $db_array);
+            service_properties()->finish('quote', (int)$quote_id, true);
 
             $response = [
                 'success'  => 1,
@@ -462,9 +477,12 @@ class Ajax extends Admin_Controller
             $quote_id = $this->input->post('quote_id');
             $quote    = $this->mdl_quotes->get_by_id($quote_id);
 
+            property_require_publishable('quote', (int)$quote_id);
+
             // Create new invoice
             $invoice_id = $this->mdl_invoices->create(null, false);
 
+            service_properties()->begin_copy('quote',(int)$quote_id,'invoice',(int)$invoice_id);
             // Update the discounts
             $this->db->where('invoice_id', $invoice_id);
             $this->db->set('invoice_discount_amount', $quote->quote_discount_amount);
@@ -508,7 +526,9 @@ class Ajax extends Admin_Controller
                     'item_order'           => $quote_item->item_order,
                 ];
 
-                $this->mdl_items->save(null, $db_array, $global_discount);
+                $db_array += service_properties()->copy_fields('quote', (int)$quote_id, 'invoice', (int)$invoice_id, $quote_item);
+                $copied_item_id = $this->mdl_items->save(null, $db_array, $global_discount);
+            service_properties()->verify_line('invoice', (int)$invoice_id, $copied_item_id, (object)$db_array);
             }
 
             $quote_tax_rates = $this->mdl_quote_tax_rates->where('quote_id', $this->input->post('quote_id'))->get()->result();
@@ -524,6 +544,9 @@ class Ajax extends Admin_Controller
                 $this->mdl_invoice_tax_rates->save(null, $db_array);
             }
 
+            service_properties()->copy_billing('quote', (int)$quote_id, 'invoice', (int)$invoice_id);
+            service_properties()->finish('invoice',(int)$invoice_id,true);
+            service_properties()->release('quote',(int)$quote_id);
             $response = [
                 'success'    => 1,
                 'invoice_id' => $invoice_id,
