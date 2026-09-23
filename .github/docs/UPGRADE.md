@@ -13,6 +13,10 @@ This guide explains how to upgrade InvoiceMuse and how to move an InvoicePlane i
 
 ## Moving from InvoicePlane to InvoiceMuse
 
+InvoiceMuse 1.0.0 is based on InvoicePlane 1.7.3 and has its own version numbers. After the
+upgrade, **Settings > Updates** shows the InvoiceMuse version (1.0.0) and the database schema
+version, which keeps InvoicePlane's numbering (1.7.3).
+
 InvoiceMuse renames the bundled invoice and quote templates:
 
 | InvoicePlane name | InvoiceMuse name |

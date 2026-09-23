@@ -30,80 +30,30 @@ A reusable composite action that sets up PHP and installs Composer dependencies 
 - `composer-update.yml` - Dependency updates
 - `yarn-update.yml` - Frontend dependency updates
 
-**Note:** `release.yml` uses manual Composer caching (not this composite action) due to its custom production build flags (`--no-dev`).
-
 ## Available Workflows
 
-### 1. Production Release (`release.yml`)
+### 1. Release (`release-tag.yml`)
 
-**Trigger:** Automatically runs on every push to the `master` branch
+**Trigger:** Pushing a version tag (`v1.0.0`, or `v1.1.0-rc.1` for a pre-release), or running it manually
 
-**Purpose:** Creates a production-ready release package of InvoicePlane v2 and publishes it as a GitHub Release
+**Purpose:** Builds the InvoiceMuse release package with `resources/release/build-package.sh` and attaches it to a draft GitHub Release
 
 **What it does:**
-1. **Downloads translations from Crowdin** - Retrieves the latest translations
-2. **Builds frontend assets** - Runs `yarn install --frozen-lockfile && yarn build`
-3. **Installs PHP dependencies** - Runs `composer install --no-dev` for production
-4. **Cleans up node_modules** - Removes Node.js dependencies
-5. **Optimizes vendor directory** - Removes unnecessary files (tests, docs, etc.)
-6. **Creates release archive** - Packages everything into a timestamped ZIP file
-7. **Generates version tag** - Creates a new version tag (alpha/beta/stable)
-8. **Creates GitHub Release** - Publishes release with changelog and artifacts
+1. **Checks the version** - The tag must match `INVOICEMUSE_VERSION` in `application/config/constants.php` and the version in `package.json`
+2. **Installs PHP dependencies** - `composer install --no-dev --optimize-autoloader`
+3. **Builds frontend assets** - `yarn install --frozen-lockfile && yarn build`
+4. **Packages the release** - Writes `invoicemuse-v<version>.zip` and a SHA-256 checksum file
+5. **Creates a draft release** - For tag pushes only, with notes taken from the matching `CHANGELOG.md` section
 
-**Release Types:**
+Manual runs build the package as a workflow artifact without creating a release, which is useful for checking a build before tagging.
 
-The workflow supports configurable release types (set in workflow file):
-- `alpha` - Pre-release versions (increments patch, adds -alpha suffix)
-- `beta` - Beta versions (increments patch, adds -beta suffix)
-- `stable` - Stable releases (increments minor version)
+**Releasing a version:**
+1. Set the new version in `application/config/constants.php` (`INVOICEMUSE_VERSION`) and `package.json`
+2. Add a `## [<version>] - <date>` section to `.github/CHANGELOG.md`
+3. Merge to `main`, then tag and push: `git tag v1.0.0 && git push origin v1.0.0`
+4. Review the draft release on GitHub and publish it
 
-To change the release type, edit the `RELEASE_TYPE` environment variable at the top of `release.yml`.
-
-**Versioning:**
-
-The workflow automatically:
-- Detects the latest tag (or starts from v0.0.0)
-- Increments version based on release type
-- Creates a new tag (e.g., v0.1.0-alpha, v0.2.0-beta, v1.0.0)
-- Generates release notes showing changes since the previous tag
-
-**Security:**
-
-The workflow uses minimal permissions:
-- `contents: write` - Required for creating releases and tags
-- `actions: write` - Required for uploading workflow artifacts
-
-**Required Secrets:**
-
-Before using this workflow, you need to configure these GitHub secrets:
-
-- `CROWDIN_PROJECT_ID` - Your Crowdin project ID
-- `CROWDIN_PERSONAL_TOKEN` - Your Crowdin personal access token
-
-To add these secrets:
-1. Go to your repository Settings
-2. Navigate to Secrets and variables → Actions
-3. Click "New repository secret"
-4. Add each secret with its corresponding value
-
-**Crowdin Setup:**
-
-To get your Crowdin credentials:
-1. Log in to [Crowdin](https://crowdin.com/)
-2. Navigate to your InvoicePlane project
-3. Go to Settings → API
-4. Generate a Personal Access Token
-5. Copy your Project ID from the project settings
-
-**Accessing Releases:**
-
-After the workflow runs:
-1. Go to the **Releases** section of your repository
-2. Find the latest release (e.g., "Release v0.1.0-alpha")
-3. Download the ZIP file and checksums from the release assets
-4. Review the automated changelog
-
-Artifacts are also available in the Actions tab for 90 days.
+The build runs the same script you can run locally: `resources/release/build-package.sh 1.0.0 dist/`.
 
 ### 2. Composer Dependency Update (`composer-update.yml`)
 
@@ -559,31 +509,11 @@ Use the manual workflows when you need immediate updates:
 4. Select update type
 5. Wait for automated PR
 
-## Workflow Optimization
+## Release Package Contents
 
-### Vendor Directory Cleanup
+`resources/release/build-package.sh` packages the committed tree only, with the same runtime files as `resources/docker/Containerfile`: `application/`, built `assets/`, `storage/`, `uploads/`, production `vendor/`, `index.php`, `htaccess`, `ipconfig.php.example`, `favicon.ico` and `robots.txt`, plus the license, README, changelog, security policy and install and upgrade guides.
 
-The release workflow aggressively cleans the vendor directory to minimize file size:
-
-- Removes all test directories (`tests`, `Tests`, `test`, `Test`)
-- Removes all documentation (`docs`, `doc`, `*.md`, `*.txt`)
-- Removes all Git metadata (`.git`, `.gitignore`, `.gitattributes`)
-- Removes build files (`composer.json`, `composer.lock`, `phpunit.xml`, etc.)
-- Removes code quality files (`.php_cs`, `phpstan.neon`, etc.)
-
-This typically reduces the vendor directory size by 40-60%.
-
-### ZIP Exclusions
-
-The following files and directories are excluded from the release archive:
-
-- Development files: `.github/*`, `tests/*`, `README.md`
-- Configuration files: `phpunit.xml`, `phpstan.neon`, `pint.json`, `rector.php`
-- Build tools: `package.json`, `yarn.lock`, `vite.config.js`, `tailwind.config.js`
-- Docker files: `docker-compose.yml`
-- Environment files: `.env*`
-- Storage: `storage/logs/*`, `storage/framework/cache/*`
-- Node modules: `node_modules/*` (already removed in cleanup step)
+The package ships in English and leaves out the InvoicePlane-Themes and InvoicePlane-e-invoices repositories, which state no license. `.github/docs/INSTALLATION.md` explains how to add them.
 
 ## Troubleshooting
 
@@ -611,30 +541,13 @@ If Composer installation fails:
 
 ## Customization
 
-### Changing PHP Version
+### Changing PHP or Node.js Version
 
-Edit line 49 in `release.yml`:
-```yaml
-php-version: '8.3' # Using 8.3 for latest features; composer.json requires ^8.2
-```
+The release workflow sets PHP in the "Set up PHP 8.2" step of `release-tag.yml` and reads Node.js from `.node-version`.
 
-### Changing Node.js Version
+### Changing Package Contents
 
-Edit line 36 in `release.yml`:
-```yaml
-node-version: '20' # Change to your desired version
-```
-
-### Adjusting Artifact Retention
-
-Edit line 121 in `release.yml`:
-```yaml
-retention-days: 90 # Change to your desired retention period (1-90 days)
-```
-
-### Custom ZIP Exclusions
-
-Add or remove exclusions in the "Create release zip" step (lines 86-110).
+Edit the `cp` lines in `resources/release/build-package.sh`.
 
 ## Best Practices
 

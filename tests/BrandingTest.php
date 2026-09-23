@@ -142,6 +142,32 @@ final class BrandingTest extends TestCase
         }
     }
 
+    #[Test]
+    public function it_keeps_the_release_version_in_step(): void
+    {
+        self::assertSame(1, preg_match("/define\\('INVOICEMUSE_VERSION', '([^']+)'\\)/", $this->read('application/config/constants.php'), $constant));
+        $package = json_decode($this->read('package.json'), true);
+
+        self::assertSame($constant[1], $package['version']);
+        self::assertStringContainsString('## [' . $constant[1] . '] - ', $this->read('.github/CHANGELOG.md'));
+
+        $updatesView = $this->read('application/modules/settings/views/partial_settings_updates.php');
+        self::assertStringContainsString('html_escape(INVOICEMUSE_VERSION)', $updatesView);
+        self::assertStringContainsString("_trans('database_schema_version')", $updatesView);
+    }
+
+    #[Test]
+    public function it_builds_release_packages_from_this_repository_only(): void
+    {
+        $workflow = $this->read('.github/workflows/release-tag.yml');
+
+        self::assertStringContainsString('resources/release/build-package.sh', $workflow);
+        self::assertStringNotContainsString('InvoicePlane/', $workflow);
+        self::assertStringNotContainsString('crowdin/github-action', $workflow);
+        self::assertFileDoesNotExist(self::ROOT . '/.github/workflows/release.yml');
+        self::assertTrue(is_executable(self::ROOT . '/resources/release/build-package.sh'));
+    }
+
     private function read(string $path): string
     {
         $contents = file_get_contents(self::ROOT . '/' . $path);

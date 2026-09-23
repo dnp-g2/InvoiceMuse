@@ -39,16 +39,32 @@ This method is recommended for production deployments:
 
 1. **Download:**
    - Get the latest version from [InvoiceMuse Releases](https://github.com/dnp-g2/InvoiceMuse/releases).
+   - To check the download, run `sha256sum -c invoicemuse-v<version>.zip.sha256` next to the zip file.
 
 2. **Extract:**
-   - Unzip the package and upload the contents to your web server.
+   - Unzip the package and upload the contents of its `invoicemuse/` folder to your web server.
 
 3. **Configuration:**
    - Rename `ipconfig.php.example` to `ipconfig.php`.
    - Edit `ipconfig.php` and set your base URL and database credentials.
+   - On Apache, rename `htaccess` to `.htaccess`.
 
 4. **Setup:**
    - Navigate to `http://your-domain.com/index.php/setup` in your browser and follow the on-screen instructions.
+
+#### Optional: extra themes and e-invoice formats
+
+InvoicePlane publishes extra themes in
+[InvoicePlane-Themes](https://github.com/InvoicePlane/InvoicePlane-Themes) and e-invoice formats
+(Factur-X, XRechnung, UBL/Peppol, FatturaPA and others) in
+[InvoicePlane-e-invoices](https://github.com/InvoicePlane/InvoicePlane-e-invoices). InvoiceMuse
+packages leave them out because neither repository states a license. To use them, download them
+from those repositories yourself:
+
+- **Themes:** copy a theme folder from `v1/` (for example `v1/next_ip_dark`) into `assets/`. It
+  then appears under **Settings > General > Theme**.
+- **E-invoice formats:** copy the contents of the repository's `application/` folder into your
+  installation's `application/` folder.
 
 ---
 

@@ -145,6 +145,7 @@ $lang = [
     'dashboard'                                     => 'Dashboard',
     'database'                                      => 'Database',
     'database_properly_configured'                  => 'The database is properly configured',
+    'database_schema_version'                       => 'Database Schema Version',
     'date'                                          => 'Date',
     'date_applied'                                  => 'Date Applied',
     'date_created'                                  => 'Date Created',
