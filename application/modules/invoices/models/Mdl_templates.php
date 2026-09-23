@@ -59,17 +59,42 @@ class Mdl_Templates extends CI_Model
     ];
 
     /**
-     * Pre-rebrand names of the bundled templates. Migration 045_1.7.3.sql renames saved
-     * settings, but the 1.7.2 upgrade check can run before it in the same upgrade.
+     * Pre-rebrand names of the bundled templates, mapped to their current names.
      *
      * @var array
      */
-    private const LEGACY_BUILT_IN_TEMPLATES = [
-        'InvoicePlane',
-        'InvoicePlane - paid',
-        'InvoicePlane - overdue',
-        'InvoicePlane_Web',
+    private const LEGACY_TEMPLATE_RENAMES = [
+        'InvoicePlane'           => 'InvoiceMuse',
+        'InvoicePlane - paid'    => 'InvoiceMuse - paid',
+        'InvoicePlane - overdue' => 'InvoiceMuse - overdue',
+        'InvoicePlane_Web'       => 'InvoiceMuse_Web',
     ];
+
+    /**
+     * Current name for a saved pre-rebrand bundled template name, or null to keep the name.
+     *
+     * A legacy name is kept when it identifies a custom template: listed in the matching
+     * CUSTOM_*_TEMPLATES allowlist, or present in CUSTOM_TEMPLATES_FOLDER, whose copy takes
+     * precedence over a bundled template of the same name.
+     *
+     * @param string $template_name Saved template name
+     * @param string $subpath       e.g. 'invoice_templates/pdf'
+     */
+    public function get_legacy_template_rename(string $template_name, string $subpath): ?string
+    {
+        $renamed = self::LEGACY_TEMPLATE_RENAMES[$template_name] ?? null;
+        if ($renamed === null) {
+            return null;
+        }
+
+        if (in_array($template_name, $this->_merge_custom($subpath, []), true)) {
+            return null;
+        }
+
+        $this->load->helper('template');
+
+        return custom_template_file($subpath . '/' . $template_name) === null ? $renamed : null;
+    }
 
     /**
      * Get the list of allowed invoice templates.
@@ -165,7 +190,9 @@ class Mdl_Templates extends CI_Model
      * This helps administrators upgrading from versions that discovered template files
      * automatically. If a saved template name is not built in and not listed in
      * ipconfig.php, it will not appear in the UI until it is added to the matching
-     * CUSTOM_*_TEMPLATES setting.
+     * CUSTOM_*_TEMPLATES setting. Email template PDF choices are checked too, because
+     * recurring invoice emails use them as saved. Pre-rebrand bundled names are skipped
+     * when migration 045 renames them (see get_legacy_template_rename()).
      *
      * @return array<string, array<int, string>>
      */
@@ -173,6 +200,7 @@ class Mdl_Templates extends CI_Model
     {
         $checks = [
             'CUSTOM_INVOICE_TEMPLATES_PDF' => [
+                'subpath'  => 'invoice_templates/pdf',
                 'allowed'  => $this->get_invoice_templates('pdf'),
                 'settings' => [
                     'pdf_invoice_template',
@@ -181,18 +209,21 @@ class Mdl_Templates extends CI_Model
                 ],
             ],
             'CUSTOM_INVOICE_TEMPLATES_PUBLIC' => [
+                'subpath'  => 'invoice_templates/public',
                 'allowed'  => $this->get_invoice_templates('public'),
                 'settings' => [
                     'public_invoice_template',
                 ],
             ],
             'CUSTOM_QUOTE_TEMPLATES_PDF' => [
+                'subpath'  => 'quote_templates/pdf',
                 'allowed'  => $this->get_quote_templates('pdf'),
                 'settings' => [
                     'pdf_quote_template',
                 ],
             ],
             'CUSTOM_QUOTE_TEMPLATES_PUBLIC' => [
+                'subpath'  => 'quote_templates/public',
                 'allowed'  => $this->get_quote_templates('public'),
                 'settings' => [
                     'public_quote_template',
@@ -200,20 +231,30 @@ class Mdl_Templates extends CI_Model
             ],
         ];
 
-        $missing = [];
-
+        $selected = [];
         foreach ($checks as $ipconfig_key => $check) {
             foreach ($check['settings'] as $setting_key) {
-                $template_name = get_setting($setting_key);
-
-                if ($template_name === ''
-                    || in_array($template_name, $check['allowed'], true)
-                    || in_array($template_name, self::LEGACY_BUILT_IN_TEMPLATES, true)) {
-                    continue;
-                }
-
-                $missing[$ipconfig_key][] = $template_name;
+                $selected[] = [$ipconfig_key, (string) get_setting($setting_key)];
             }
+        }
+
+        $this->db->select('email_template_type, email_template_pdf_template');
+        foreach ($this->db->get('ip_email_templates')->result() as $email_template) {
+            $ipconfig_key = $email_template->email_template_type === 'quote' ? 'CUSTOM_QUOTE_TEMPLATES_PDF' : 'CUSTOM_INVOICE_TEMPLATES_PDF';
+            $selected[]   = [$ipconfig_key, (string) $email_template->email_template_pdf_template];
+        }
+
+        $missing = [];
+        foreach ($selected as [$ipconfig_key, $template_name]) {
+            $check = $checks[$ipconfig_key];
+
+            if ($template_name === ''
+                || in_array($template_name, $check['allowed'], true)
+                || $this->get_legacy_template_rename($template_name, $check['subpath']) !== null) {
+                continue;
+            }
+
+            $missing[$ipconfig_key][] = $template_name;
         }
 
         foreach ($missing as $ipconfig_key => $template_names) {

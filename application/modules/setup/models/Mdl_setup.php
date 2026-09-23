@@ -382,6 +382,61 @@ class Mdl_Setup extends CI_Model
 
     public function upgrade_043_1_7_2()
     {
+        $this->notify_missing_allowlisted_templates();
+    }
+
+    /**
+     * Point saved template choices at the renamed InvoiceMuse templates. Names that belong
+     * to a custom template are kept (see Mdl_Templates::get_legacy_template_rename()).
+     */
+    public function upgrade_045_1_7_3()
+    {
+        $this->load->model('invoices/mdl_templates');
+
+        $setting_subpaths = [
+            'pdf_invoice_template'         => 'invoice_templates/pdf',
+            'pdf_invoice_template_paid'    => 'invoice_templates/pdf',
+            'pdf_invoice_template_overdue' => 'invoice_templates/pdf',
+            'pdf_quote_template'           => 'quote_templates/pdf',
+            'public_invoice_template'      => 'invoice_templates/public',
+            'public_quote_template'        => 'quote_templates/public',
+        ];
+
+        foreach ($setting_subpaths as $setting_key => $subpath) {
+            $this->db->where('setting_key', $setting_key);
+            $setting = $this->db->get('ip_settings')->row();
+            if ( ! $setting) {
+                continue;
+            }
+
+            $renamed = $this->mdl_templates->get_legacy_template_rename((string) $setting->setting_value, $subpath);
+            if ($renamed === null) {
+                continue;
+            }
+
+            $this->db->where('setting_key', $setting_key);
+            $this->db->update('ip_settings', ['setting_value' => $renamed]);
+        }
+
+        $this->db->select('email_template_id, email_template_type, email_template_pdf_template');
+        $email_templates = $this->db->get('ip_email_templates')->result();
+
+        foreach ($email_templates as $email_template) {
+            $subpath = ($email_template->email_template_type === 'quote' ? 'quote' : 'invoice') . '_templates/pdf';
+            $renamed = $this->mdl_templates->get_legacy_template_rename((string) $email_template->email_template_pdf_template, $subpath);
+            if ($renamed === null) {
+                continue;
+            }
+
+            $this->db->where('email_template_id', $email_template->email_template_id);
+            $this->db->update('ip_email_templates', ['email_template_pdf_template' => $renamed]);
+        }
+
+        $this->notify_missing_allowlisted_templates();
+    }
+
+    private function notify_missing_allowlisted_templates(): void
+    {
         if ( ! $this->session->userdata('is_upgrade')) {
             return;
         }

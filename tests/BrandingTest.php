@@ -125,17 +125,21 @@ final class BrandingTest extends TestCase
     }
 
     #[Test]
-    public function it_migrates_saved_template_names(): void
+    public function it_migrates_saved_template_names_in_php(): void
     {
-        $migration = $this->read('application/modules/setup/sql/045_1.7.3.sql');
+        self::assertStringNotContainsString('UPDATE', $this->read('application/modules/setup/sql/045_1.7.3.sql'));
 
+        $setup = $this->read('application/modules/setup/models/Mdl_setup.php');
+        self::assertSame(1, preg_match('/function upgrade_045_1_7_3\(\)\s*\{(.*?)\n    \}/s', $setup, $match));
+        self::assertSame(2, substr_count($match[1], 'get_legacy_template_rename('));
+        self::assertStringContainsString("update('ip_settings'", $match[1]);
+        self::assertStringContainsString("update('ip_email_templates'", $match[1]);
+
+        $model = $this->read('application/modules/invoices/models/Mdl_templates.php');
         foreach (self::LEGACY_TEMPLATES as $legacy) {
             $renamed = str_replace('InvoicePlane', 'InvoiceMuse', $legacy);
-            self::assertStringContainsString("WHEN '" . $legacy . "' THEN '" . $renamed . "'", $migration);
+            self::assertMatchesRegularExpression("/'" . preg_quote($legacy, '/') . "'\\s*=> '" . preg_quote($renamed, '/') . "'/", $model);
         }
-
-        self::assertStringContainsString('UPDATE `ip_settings`', $migration);
-        self::assertStringContainsString('UPDATE `ip_email_templates`', $migration);
     }
 
     private function read(string $path): string
