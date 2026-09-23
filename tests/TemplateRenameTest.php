@@ -100,6 +100,29 @@ final class TemplateRenameTest extends TestCase
     #[Test]
     #[RunInSeparateProcess]
     #[PreserveGlobalState(false)]
+    public function it_warns_about_email_template_pdf_choices(): void
+    {
+        $GLOBALS['template_test_rows']['ip_email_templates'] = [
+            (object) ['email_template_type' => 'invoice', 'email_template_pdf_template' => 'InvoicePlane - overdue'],
+            (object) ['email_template_type' => 'quote', 'email_template_pdf_template' => 'InvoicePlane'],
+            (object) ['email_template_type' => 'invoice', 'email_template_pdf_template' => 'InvoiceMuse'],
+            (object) ['email_template_type' => 'quote', 'email_template_pdf_template' => 'MyQuote'],
+            (object) ['email_template_type' => 'invoice', 'email_template_pdf_template' => null],
+        ];
+        $templates = $this->load_templates([], ['invoice_templates/pdf/InvoicePlane - overdue.php']);
+
+        self::assertSame(
+            [
+                'CUSTOM_INVOICE_TEMPLATES_PDF' => ['InvoicePlane - overdue'],
+                'CUSTOM_QUOTE_TEMPLATES_PDF'   => ['MyQuote'],
+            ],
+            $templates->get_missing_allowlisted_template_settings()
+        );
+    }
+
+    #[Test]
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
     public function it_finds_template_files_only_in_the_custom_folder(): void
     {
         $this->load_templates([], ['quote_templates/pdf/Custom Quote.php']);

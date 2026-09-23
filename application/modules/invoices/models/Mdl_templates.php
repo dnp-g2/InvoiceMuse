@@ -190,8 +190,9 @@ class Mdl_Templates extends CI_Model
      * This helps administrators upgrading from versions that discovered template files
      * automatically. If a saved template name is not built in and not listed in
      * ipconfig.php, it will not appear in the UI until it is added to the matching
-     * CUSTOM_*_TEMPLATES setting. Pre-rebrand bundled names are skipped when migration
-     * 045 renames them (see get_legacy_template_rename()).
+     * CUSTOM_*_TEMPLATES setting. Email template PDF choices are checked too, because
+     * recurring invoice emails use them as saved. Pre-rebrand bundled names are skipped
+     * when migration 045 renames them (see get_legacy_template_rename()).
      *
      * @return array<string, array<int, string>>
      */
@@ -230,20 +231,30 @@ class Mdl_Templates extends CI_Model
             ],
         ];
 
-        $missing = [];
-
+        $selected = [];
         foreach ($checks as $ipconfig_key => $check) {
             foreach ($check['settings'] as $setting_key) {
-                $template_name = get_setting($setting_key);
-
-                if ($template_name === ''
-                    || in_array($template_name, $check['allowed'], true)
-                    || $this->get_legacy_template_rename($template_name, $check['subpath']) !== null) {
-                    continue;
-                }
-
-                $missing[$ipconfig_key][] = $template_name;
+                $selected[] = [$ipconfig_key, (string) get_setting($setting_key)];
             }
+        }
+
+        $this->db->select('email_template_type, email_template_pdf_template');
+        foreach ($this->db->get('ip_email_templates')->result() as $email_template) {
+            $ipconfig_key = $email_template->email_template_type === 'quote' ? 'CUSTOM_QUOTE_TEMPLATES_PDF' : 'CUSTOM_INVOICE_TEMPLATES_PDF';
+            $selected[]   = [$ipconfig_key, (string) $email_template->email_template_pdf_template];
+        }
+
+        $missing = [];
+        foreach ($selected as [$ipconfig_key, $template_name]) {
+            $check = $checks[$ipconfig_key];
+
+            if ($template_name === ''
+                || in_array($template_name, $check['allowed'], true)
+                || $this->get_legacy_template_rename($template_name, $check['subpath']) !== null) {
+                continue;
+            }
+
+            $missing[$ipconfig_key][] = $template_name;
         }
 
         foreach ($missing as $ipconfig_key => $template_names) {
