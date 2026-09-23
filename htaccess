@@ -1,7 +1,10 @@
-### InvoicePlane htaccess
+### InvoiceMuse htaccess
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  ### Composer libraries are loaded internally only; never serve them
+  RewriteRule ^vendor/ - [F,L]
   
   ### uncomment to force HTTPS
   # RewriteCond %{HTTPS} off
