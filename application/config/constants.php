@@ -84,3 +84,15 @@ defined('EXIT_USER_INPUT') || define('EXIT_USER_INPUT', 7); // invalid user inpu
 defined('EXIT_DATABASE') || define('EXIT_DATABASE', 8); // database error
 defined('EXIT__AUTO_MIN') || define('EXIT__AUTO_MIN', 9); // lowest automatically-assigned error code
 defined('EXIT__AUTO_MAX') || define('EXIT__AUTO_MAX', 125); // highest automatically-assigned error code
+
+/*
+|--------------------------------------------------------------------------
+| InvoiceMuse release version
+|--------------------------------------------------------------------------
+|
+| The released InvoiceMuse version, kept in step with package.json and the
+| release tag. The database schema version comes from the setup/sql migration
+| filenames and follows InvoicePlane's numbering.
+|
+*/
+defined('INVOICEMUSE_VERSION') || define('INVOICEMUSE_VERSION', '1.0.0');

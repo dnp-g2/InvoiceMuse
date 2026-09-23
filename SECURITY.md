@@ -6,14 +6,12 @@ appreciate the work of the researchers who help keep our users safe.
 ## Supported Versions
 
 Security fixes are provided for the latest stable release. Older releases receive fixes only at
-the maintainers' discretion.
+the maintainers' discretion. Version numbers are InvoiceMuse release versions; for InvoicePlane
+releases, see [InvoicePlane's security policy](https://github.com/InvoicePlane/InvoicePlane/security/policy).
 
 | Version | Supported          |
 |---------|--------------------|
-| 1.7.2   | :white_check_mark: |
-| 1.7.1   | :x: (upgrade — contains a critical RCE) |
-| 1.7.0   | :x: (upgrade — contains a critical RCE) |
-| < 1.7   | :x:                |
+| 1.0.x   | :white_check_mark: |
 
 ## Reporting a Vulnerability
 

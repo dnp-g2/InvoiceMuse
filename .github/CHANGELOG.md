@@ -1,11 +1,13 @@
 # Changelog
 
-All notable changes to InvoicePlane will be documented in this file.
+All notable changes to InvoiceMuse are documented in this file. InvoiceMuse is based on
+InvoicePlane: sections from 1.0.0 onward are InvoiceMuse releases, and the sections after it are
+InvoicePlane releases.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Full write-ups for individual vulnerabilities live in the published
+Full write-ups for vulnerabilities fixed in InvoicePlane live in its published
 [GitHub Security Advisories](https://github.com/InvoicePlane/InvoicePlane/security/advisories)
 and in [`.github/security/`](security/). This changelog records *what* changed; the advisories
 record *why* and *how*.
@@ -14,10 +16,17 @@ record *why* and *how*.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-23
+
+First InvoiceMuse release. It is based on InvoicePlane 1.7.3 and includes the later InvoicePlane
+fixes listed below, up to commit `1befa6ef`.
+
 ### Changed
 
 - **Rebranded as InvoiceMuse.** InvoiceMuse is based on [InvoicePlane](https://www.invoiceplane.com/), and the admin and setup pages now carry a credit thanking its developers and contributors. The upstream copyright and MIT license notice remain in `LICENSE.txt`. Removed the Settings update check and news feed, which queried InvoicePlane's update and news services.
 - **Bundled templates renamed.** `InvoicePlane`, `InvoicePlane - paid`, `InvoicePlane - overdue` and `InvoicePlane_Web` are now `InvoiceMuse`, `InvoiceMuse - paid`, `InvoiceMuse - overdue` and `InvoiceMuse_Web`. Migration `045_1.7.3.sql` updates saved template settings and email template PDF choices, keeping any old name that belongs to a custom template in `CUSTOM_TEMPLATES_FOLDER` or a `CUSTOM_*_TEMPLATES` allowlist; until it runs, PDFs fall back to the `InvoiceMuse` template without paid/overdue stamps. Custom templates that include the old files need the new file names. Allowlisted custom public templates stored only in `CUSTOM_TEMPLATES_FOLDER` now load on public invoice and quote pages. See [UPGRADE.md](docs/UPGRADE.md#moving-from-invoiceplane-to-invoicemuse).
+- **Own version numbering.** InvoiceMuse releases start at 1.0.0. **Settings > Updates** shows the InvoiceMuse version alongside the database schema version, which keeps InvoicePlane's migration numbering (1.7.3). Asset URLs are cache-busted by the InvoiceMuse version.
+- **Release packages.** `invoicemuse-v<version>.zip` is built from this repository by `resources/release/build-package.sh`, in English, without the InvoicePlane-Themes and InvoicePlane-e-invoices repositories, which state no license. INSTALLATION.md explains how to add them.
 
 ### Security fixes
 

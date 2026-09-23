@@ -120,7 +120,7 @@ function _theme_asset($asset): void
 {
     $asset = IP_DEBUG ? strtr($asset, ['.min.' => '.']) : $asset;
     echo base_url() . 'assets/' . get_setting('system_theme', 'invoiceplane');
-    echo '/' . $asset . '?v=' . get_setting('current_version');
+    echo '/' . $asset . '?v=' . INVOICEMUSE_VERSION;
 }
 
 /**
@@ -132,5 +132,5 @@ function _theme_asset($asset): void
 function _core_asset($asset): void
 {
     $asset = IP_DEBUG ? strtr($asset, ['.min.' => '.']) : $asset;
-    echo base_url() . 'assets/core/' . $asset . '?v=' . get_setting('current_version');
+    echo base_url() . 'assets/core/' . $asset . '?v=' . INVOICEMUSE_VERSION;
 }
