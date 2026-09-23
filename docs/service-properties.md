@@ -8,7 +8,7 @@ Drafts may be incomplete. **Preview draft** prints an explicit incomplete warnin
 
 Copies, credits and quote-to-invoice conversion retain address snapshots for the same customer. Changing a draft customer clears property assignments. Recurring invoices require valid active properties and do not advance the schedule when validation fails. Existing documents predating installation retain their legacy behavior. Copy a legacy invoice to a new draft and assign properties before making it recurring.
 
-This release supports the configured InvoicePlane PDF (including paid/overdue wrappers), InvoicePlane_Web public templates, and guest views. Other custom templates and electronic-invoice formats need explicit integration before use with service properties.
+This release supports the bundled InvoiceMuse PDF templates (including the paid/overdue wrappers), the InvoiceMuse_Web public templates, and guest views. Other custom templates and electronic-invoice formats need explicit integration before use with service properties.
 
 ## Installation and recovery
 

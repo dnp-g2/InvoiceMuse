@@ -201,8 +201,8 @@ Template names are controlled by hardcoded constants in `Mdl_Templates`. The fil
 
 ```php
 private const ALLOWED_INVOICE_TEMPLATES = [
-    'pdf'    => ['InvoicePlane', 'InvoicePlane - paid', 'InvoicePlane - overdue'],
-    'public' => ['InvoicePlane_Web'],
+    'pdf'    => ['InvoiceMuse', 'InvoiceMuse - paid', 'InvoiceMuse - overdue'],
+    'public' => ['InvoiceMuse_Web'],
 ];
 ```
 

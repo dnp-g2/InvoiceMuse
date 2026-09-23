@@ -10,7 +10,7 @@
 <html class="no-js" lang="<?php _trans('cldr'); ?>"> <!--<![endif]-->
 
 <head>
-    <title>InvoicePlane Setup</title>
+    <title>InvoiceMuse Setup</title>
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -18,6 +18,7 @@
     <meta name="robots" content="NOINDEX,NOFOLLOW">
 
     <link rel="icon" href="<?php _core_asset('img/favicon.png'); ?>" type="image/png">
+    <link rel="icon" href="<?php _core_asset('img/favicon.svg'); ?>" type="image/svg+xml">
 
     <link rel="stylesheet" href="<?php _theme_asset('css/welcome.css'); ?>" type="text/css">
     <!--[if lt IE 9]>
@@ -34,6 +35,8 @@
 </noscript>
 
 <?php echo $content; ?>
+
+<?php echo $this->layout->load_view('layout/includes/product_footer'); ?>
 
 <script>$('.simple-select').select2();</script>
 

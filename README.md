@@ -1,33 +1,26 @@
-<img align="right" alt="InvoicePlane logo" src="/assets/core/img/favicon.png">
+<img align="right" alt="InvoiceMuse logo" src="/assets/core/img/favicon.svg" width="64" height="64">
 
-# _InvoicePlane_
+# _InvoiceMuse_
 
 _A libre self-hosted web application designed to help you manage invoices, clients, and payments efficiently._
 
-[![Current version](https://img.shields.io/badge/dynamic/json.svg?label=Current%20Version&url=https%3A%2F%2Fapi.github.com%2Frepos%2FInvoicePlane%2FInvoicePlane%2Freleases%2Flatest&query=%24.name&colorB=%23429ae1)](https://www.invoiceplane.com/)
-[![Downloads](https://img.shields.io/github/downloads/invoiceplane/invoiceplane/total?colorB=%23429ae1)](https://www.invoiceplane.com/)
-[![Translation](https://img.shields.io/badge/Translations-%40%20Crowdin-429ae1)](https://translations.invoiceplane.com/project/fusioninvoice)
+## Acknowledgment
 
-
-[![Discord](https://img.shields.io/badge/Chat%3A-Discord-5865F2.svg?logo=discord&logoColor=white)](https://discord.gg/PPzD2hTrXt)
-[![Wiki](https://img.shields.io/badge/Help%3A-Official%20Wiki-429ae1.svg)](https://wiki.invoiceplane.com/)
-[![Community Forums](https://img.shields.io/badge/Help%3A-Community%20Forums-429ae1.svg)](https://community.invoiceplane.com/)
-[![Issue Tracker](https://img.shields.io/badge/Development%3A-Issue%20Tracker-429ae1.svg)](https://github.com/invoiceplane/invoiceplane/issues/)
-[![Contribution Guide](https://img.shields.io/badge/Development%3A-Contribution%20Guide-429ae1.svg)](.github/CONTRIBUTING.md)
+InvoiceMuse is an independent project based on [InvoicePlane](https://www.invoiceplane.com/).
+We sincerely thank the InvoicePlane developers and contributors for their work and for making
+the project available as open-source software. InvoiceMuse is not affiliated with or endorsed by
+the InvoicePlane project. Upstream copyright and license notices are preserved in
+[`LICENSE.txt`](LICENSE.txt).
 
 ---
 
 ## Release Notes
 
-Every release is documented in [CHANGELOG.md](.github/CHANGELOG.md). Downloadable packages and the
-per-version release notes are published on the
-[GitHub Releases](https://github.com/InvoicePlane/InvoicePlane/releases) page. Formal security
-advisories live in [`.github/security/`](.github/security/); step-by-step upgrade instructions
-are in [UPGRADE.md](.github/docs/UPGRADE.md).
+Project changes are documented in [CHANGELOG.md](.github/CHANGELOG.md). Historical security
+advisories inherited from upstream remain in [`.github/security/`](.github/security/), and
+step-by-step upgrade instructions are in [UPGRADE.md](.github/docs/UPGRADE.md).
 
-> **Security releases matter here.** Check the CHANGELOG before upgrading, and subscribe to
-> [GitHub Releases](https://github.com/InvoicePlane/InvoicePlane/releases) notifications so you
-> don't miss one.
+> **Security releases matter here.** Check the changelog before upgrading.
 
 ---
 
@@ -49,15 +42,15 @@ are in [UPGRADE.md](.github/docs/UPGRADE.md).
 
 ```bash
 # Clone the repository
-git clone https://github.com/InvoicePlane/InvoicePlane.git
-cd InvoicePlane
+git clone https://github.com/dnp-g2/InvoiceMuse.git
+cd InvoiceMuse
 
 # Build and start the app + database — dependencies, assets, and
 # configuration are all handled inside the container.
 docker compose up -d --build
 
 # Access the application
-# InvoicePlane: http://localhost:4895
+# InvoiceMuse: http://localhost:4895
 ```
 
 See [Installation instructions](.github/docs/INSTALLATION.md)
@@ -70,7 +63,7 @@ See [Installation instructions](.github/docs/INSTALLATION.md)
 
 ### Production Installation
 
-1. Download the latest release from the [InvoicePlane website](https://www.invoiceplane.com/).
+1. Download the latest release from [InvoiceMuse Releases](https://github.com/dnp-g2/InvoiceMuse/releases).
 2. Extract and upload the files to your web server.
 3. Copy `ipconfig.php.example` to `ipconfig.php` and set your base URL and database credentials.
 4. Navigate to `http://your-domain.com/index.php/setup` to run the installer.
@@ -108,7 +101,7 @@ overridden. Set `SESS_SAVE_PATH` in `ipconfig.php` to an absolute path to store 
 elsewhere, e.g. outside the document root for additional security:
 
 ```
-SESS_SAVE_PATH=/var/lib/invoiceplane/storage/framework/sessions
+SESS_SAVE_PATH=/var/lib/invoicemuse/storage/framework/sessions
 ```
 
 > **Do not leave `SESS_SAVE_PATH` set to an empty value.** An empty `SESS_SAVE_PATH=`
@@ -125,41 +118,29 @@ If you mount a volume in Docker, include the configured path in your persistent 
 
 ## Container Deployment
 
-A pre-built container image is available, configured entirely through environment variables —
-no `ipconfig.php` file needed. The entrypoint generates the configuration and runs any pending
-database migrations automatically on startup.
+The container image builds from `resources/docker/Containerfile` and is configured entirely
+through environment variables, so no `ipconfig.php` file is needed. The entrypoint generates the
+configuration and runs any pending database migrations automatically on startup.
 
 See [Container (Docker) Deployment Instructions](.github/docs/CONTAINER_DEPLOYMENT.md) for the full list of
 required/optional environment variables, default admin user setup, and persistent volumes.
 
 ---
 
-## Community and Support
+## Upstream Resources
 
-**[Join our Discord](https://discord.gg/PPzD2hTrXt)** — it's the fastest way to reach users,
-developers, and contributors in real time, whether you need help, want to report something, or
-are interested in contributing.
-
-Other resources:
-
-- **Discord:** [discord.gg/PPzD2hTrXt](https://discord.gg/PPzD2hTrXt) — real-time chat with the community.
-- **Community Forums:** [community.invoiceplane.com](https://community.invoiceplane.com/) — ask questions, share knowledge, and get help from the community.
-- **Issue Tracker:** [GitHub Issues](https://github.com/InvoicePlane/InvoicePlane/issues) — report bugs and request features.
-- **Wiki & Documentation:** [wiki.invoiceplane.com](https://wiki.invoiceplane.com/) — find guides, FAQs, and detailed setup instructions.
-
-> *InvoicePlane is developed and maintained by a dedicated team of volunteers. Support is provided by the community on a best-effort basis.*
+The [InvoicePlane wiki](https://wiki.invoiceplane.com/) and
+[community forum](https://community.invoiceplane.com/) may still be useful because InvoiceMuse
+is derived from InvoicePlane. These are upstream resources and do not provide official
+InvoiceMuse support.
 
 ---
 
 ## Contributing
 
-We welcome contributions from the community! To get involved:
-
-- **Report Issues:** Use the [Issue Tracker](https://github.com/InvoicePlane/InvoicePlane/issues) to report bugs or request features.
-- **Submit Pull Requests:** Fork the repository, make your changes, and open a pull request.
-- **Translate:** Help translate InvoicePlane — see [TRANSLATIONS.md](.github/TRANSLATIONS.md).
-
-For contribution guidelines, see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+Contributions are welcome. Use this repository's issue tracker and pull-request interface.
+For contribution and translation guidance, see [CONTRIBUTING.md](.github/CONTRIBUTING.md) and
+[TRANSLATIONS.md](.github/TRANSLATIONS.md).
 
 ### Developer Resources
 
@@ -172,18 +153,26 @@ For contribution guidelines, see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ## Security
 
-If you discover a security vulnerability, please report it privately by opening a
-[GitHub Security Advisory](https://github.com/InvoicePlane/InvoicePlane/security/advisories/new)
-before disclosing it publicly. See our [Security Policy](SECURITY.md) for the full process.
+If you discover a security vulnerability, follow the private reporting process described in
+[SECURITY.md](SECURITY.md) before disclosing it publicly.
 
-Published advisories and per-version security notes are collected in
-[`.github/security/`](.github/security/) and on the
-[GitHub Security Advisories](https://github.com/InvoicePlane/InvoicePlane/security/advisories) page.
+Historical upstream advisories and per-version security notes are retained in
+[`.github/security/`](.github/security/) for traceability.
 
 ---
 
 ## License & Copyright
 
-InvoicePlane is licensed under the [MIT License](LICENSE.txt).
+InvoiceMuse includes software originally released as InvoicePlane under the
+[MIT License](LICENSE.txt). The original InvoicePlane copyright notice and permission notice
+remain in that file as required by the license.
 
-The **InvoicePlane name** and **logo** are copyrighted by [Kovah.de](https://kovah.de/) and [InvoicePlane.com](https://www.invoiceplane.com/). Usage is restricted. For more information, visit [invoiceplane.com/license-copyright](https://www.invoiceplane.com/license-copyright).
+The **InvoicePlane name** and **logo** belong to their respective owners. InvoiceMuse uses its
+own name and original visual identity; upstream trademarks are referenced only for attribution
+and compatibility documentation.
+
+### Compatibility names
+
+Some internal identifiers keep their historical InvoicePlane names for upgrade and
+saved-setting compatibility: database tables, configuration constants, and the `invoiceplane`
+and `invoiceplane_blue` theme folders.

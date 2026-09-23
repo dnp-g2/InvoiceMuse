@@ -269,7 +269,7 @@ function select_pdf_invoice_template($invoice)
         $safe_template_name = preg_replace('/[\x00-\x1F\x7F]/', '', (string) $template_name);
         log_message('error', 'Invalid PDF invoice template from settings: ' . $safe_template_name . ', using default');
 
-        return 'InvoicePlane'; // Safe default
+        return 'InvoiceMuse'; // Safe default
     }
 
     return $validated;
@@ -383,7 +383,7 @@ function validate_template_name($template_name, $type = 'invoice', $scope = 'pdf
 
     // Security Layer 7: Additional character validation - only allow safe characters
     // Template names should only contain alphanumeric, spaces, hyphens, and underscores
-    // Note: Spaces are allowed to support existing templates like "InvoicePlane - paid"
+    // Note: Spaces are allowed to support existing templates like "InvoiceMuse - paid"
     // While spaces in filenames can be problematic in some environments, they are safe here
     // because: (1) template names are validated against a static whitelist, (2) they are
     // never used in shell commands, and (3) they match existing production templates
@@ -411,7 +411,7 @@ function validate_template_name($template_name, $type = 'invoice', $scope = 'pdf
  *
  * @return array Returns ['path' => string, 'name' => string] with validated path and name
  */
-function get_validated_template_path($template_name, $type = 'invoice', $scope = 'public', $default_template = 'InvoicePlane_Web')
+function get_validated_template_path($template_name, $type = 'invoice', $scope = 'public', $default_template = 'InvoiceMuse_Web')
 {
     // Load file_security helper if not already loaded
     $CI = & get_instance();
@@ -496,8 +496,8 @@ function validate_pdf_template($template_name, $type = 'invoice', $default_setti
         if ($default_setting) {
             $template_name = $CI->mdl_settings->setting($default_setting);
         } else {
-            // Use default template name (InvoicePlane is the default for both types)
-            return 'InvoicePlane';
+            // Use default template name (InvoiceMuse is the default for both types)
+            return 'InvoiceMuse';
         }
     }
 
@@ -508,8 +508,8 @@ function validate_pdf_template($template_name, $type = 'invoice', $default_setti
         $safe_template_name = sanitize_for_logging((string) $template_name);
         log_message('error', 'Invalid PDF template: ' . $safe_template_name . ', using default');
 
-        // Return safe default (InvoicePlane is the default template for both invoice and quote PDFs)
-        return 'InvoicePlane';
+        // Return safe default (InvoiceMuse is the default template for both invoice and quote PDFs)
+        return 'InvoiceMuse';
     }
 
     return $validated;

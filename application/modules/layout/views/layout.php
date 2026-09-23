@@ -41,6 +41,8 @@ if (get_setting('disable_sidebar') != 1) {
 
     <div id="modal-placeholder"></div>
 
+<?php echo $this->layout->load_view('layout/includes/product_footer'); ?>
+
 <?php echo $this->layout->load_view('layout/includes/fullpage-loader'); ?>
 
     <script defer src="<?php _core_asset('js/scripts.min.js'); ?>"></script>

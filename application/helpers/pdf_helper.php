@@ -22,7 +22,7 @@ if ( ! defined('BASEPATH')) {
  * @param bool   $show_item_discounts
  * @param string $is                  'invoice' or 'quote'
  *
- * @scope views/[invoice|quote]_templates/pdf/InvoicePlane[| - paid| - overdue].pdf
+ * @scope views/[invoice|quote]_templates/pdf/InvoiceMuse[| - paid| - overdue].pdf
  */
 function discount_global_print_in_pdf($obj, $show_item_discounts, string $is = 'invoice'): void
 {
@@ -88,7 +88,7 @@ function generate_invoice_pdf($invoice_id, $stream = true, $invoice_template = n
         $validated = validate_template_name($invoice_template, 'invoice', 'pdf');
         if ($validated === false) {
             log_message('error', 'Invalid PDF invoice template parameter: ' . sanitize_for_logging($invoice_template) . ', using default');
-            $invoice_template = 'InvoicePlane'; // Safe default
+            $invoice_template = 'InvoiceMuse'; // Safe default
         } else {
             $invoice_template = $validated;
         }
@@ -326,7 +326,7 @@ function generate_quote_pdf($quote_id, $stream = true, $quote_template = null)
     $validated = validate_template_name($quote_template, 'quote', 'pdf');
     if ($validated === false) {
         log_message('error', 'Invalid PDF quote template: ' . sanitize_for_logging($quote_template) . ', using default');
-        $quote_template = 'InvoicePlane'; // Safe default
+        $quote_template = 'InvoiceMuse'; // Safe default
     } else {
         $quote_template = $validated;
     }

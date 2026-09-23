@@ -475,12 +475,12 @@ class Mdl_Setup extends CI_Model
             'decimal_point'                => '.',
             'cron_key'                     => generate_secure_token(8),
             'tax_rate_decimal_places'      => 2,
-            'pdf_invoice_template'         => 'InvoicePlane',
-            'pdf_invoice_template_paid'    => 'InvoicePlane - paid',
-            'pdf_invoice_template_overdue' => 'InvoicePlane - overdue',
-            'pdf_quote_template'           => 'InvoicePlane',
-            'public_invoice_template'      => 'InvoicePlane_Web',
-            'public_quote_template'        => 'InvoicePlane_Web',
+            'pdf_invoice_template'         => 'InvoiceMuse',
+            'pdf_invoice_template_paid'    => 'InvoiceMuse - paid',
+            'pdf_invoice_template_overdue' => 'InvoiceMuse - overdue',
+            'pdf_quote_template'           => 'InvoiceMuse',
+            'public_invoice_template'      => 'InvoiceMuse_Web',
+            'public_quote_template'        => 'InvoiceMuse_Web',
             'disable_sidebar'              => 1,
         ];
 

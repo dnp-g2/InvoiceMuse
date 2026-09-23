@@ -1,7 +1,7 @@
 <div class="container">
     <div class="install-panel">
 
-        <h1 id="logo"><span>InvoicePlane</span></h1>
+        <h1 id="logo"><span>InvoiceMuse</span></h1>
 
         <h2><?php _trans('setup_complete'); ?></h2>
 

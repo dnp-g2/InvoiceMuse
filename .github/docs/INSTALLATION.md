@@ -1,6 +1,6 @@
 # Installation Guide
 
-Follow the instructions below to install InvoicePlane on your preferred platform.
+Follow the instructions below to install InvoiceMuse on your preferred platform.
 
 ## Table of Contents
 
@@ -38,7 +38,7 @@ Follow the instructions below to install InvoicePlane on your preferred platform
 This method is recommended for production deployments:
 
 1. **Download:**
-   - Get the latest version from the [InvoicePlane website](https://www.invoiceplane.com/).
+   - Get the latest version from [InvoiceMuse Releases](https://github.com/dnp-g2/InvoiceMuse/releases).
 
 2. **Extract:**
    - Unzip the package and upload the contents to your web server.
@@ -54,7 +54,7 @@ This method is recommended for production deployments:
 
 ### 2. Cloning the Repository (Development)
 
-This method is recommended for development and contributing to InvoicePlane:
+This method is recommended for development and contributing to InvoiceMuse:
 
 See [Development Workflow](#development-workflow) section below for detailed steps.
 
@@ -62,7 +62,7 @@ See [Development Workflow](#development-workflow) section below for detailed ste
 
 ## Development Workflow
 
-This section outlines the three-phase workflow for developing InvoicePlane:
+This section outlines the three-phase workflow for developing InvoiceMuse:
 
 ### Prepare: Initial Setup
 
@@ -70,8 +70,8 @@ The **Prepare** phase sets up your development environment for the first time.
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/InvoicePlane/InvoicePlane.git
-   cd InvoicePlane
+   git clone https://github.com/dnp-g2/InvoiceMuse.git
+   cd InvoiceMuse
    ```
 
 2. **Install PHP Dependencies:**
@@ -113,7 +113,7 @@ The **StartMeUp** phase launches your development environment. Two Docker setups
 `docker-compose.yml` provides separated `php`/`nginx`/`db`/`phpmyadmin` services that bind-mount
 your working tree, so PHP/frontend edits are reflected immediately without a rebuild — this is
 the one to use for active development. (`compose.yml` is the other option: a single
-self-contained image, good for quickly spinning up InvoicePlane to test something, but not for
+self-contained image, good for quickly spinning up InvoiceMuse to test something, but not for
 iterating on code — see [resources/docker/README.md](../../resources/docker/README.md).)
 
 Add `127.0.0.1 ivpl.local` to your `/etc/hosts` file first — the bundled nginx config expects
@@ -136,7 +136,7 @@ docker compose -f docker-compose.yml down
 ```
 
 **Access Points:**
-- **InvoicePlane**: <http://ivpl.local>
+- **InvoiceMuse**: <http://ivpl.local>
 - **phpMyAdmin**: <http://localhost:8081>
   - Username: `ipdevdb`
   - Password: `ipdevdb`
@@ -208,7 +208,7 @@ The **Workflow** phase covers your day-to-day development activities.
 - **Recommended**: Use Docker Desktop for Mac (see [Docker Installation](#docker-installation))
 - **Alternative with Laravel Herd**:
   - Install [Laravel Herd](https://herd.laravel.com/).
-  - Place InvoicePlane files in the Herd sites directory.
+  - Place InvoiceMuse files in the Herd sites directory.
   - Follow the standard installation steps.
 - **Manual Setup**: Install PHP 8.1+ via Homebrew and follow Linux instructions
 
@@ -220,7 +220,7 @@ The **Workflow** phase covers your day-to-day development activities.
     sudo apt-get update
     sudo apt-get install nginx mariadb-server php8.1-fpm php8.1-mysql php8.1-mbstring php8.1-xml php8.1-curl
     ```
-  - Configure Nginx to serve InvoicePlane (see Docker nginx config for reference)
+  - Configure Nginx to serve InvoiceMuse (see Docker nginx config for reference)
   - Follow the [Development Workflow](#development-workflow) steps
 - **Docker**: Recommended for consistent environment (see [Docker Installation](#docker-installation))
 
@@ -228,7 +228,7 @@ The **Workflow** phase covers your day-to-day development activities.
 
 ## Docker Installation
 
-Docker provides the easiest and most consistent development environment for InvoicePlane. This
+Docker provides the easiest and most consistent development environment for InvoiceMuse. This
 repository ships two different compose files for two different purposes — see
 [resources/docker/README.md](../../resources/docker/README.md) for the full comparison. This
 section covers `docker-compose.yml`, the one for active development.
@@ -242,8 +242,8 @@ section covers `docker-compose.yml`, the one for active development.
 
 1. **Clone Repository:**
    ```bash
-   git clone https://github.com/InvoicePlane/InvoicePlane.git
-   cd InvoicePlane
+   git clone https://github.com/dnp-g2/InvoiceMuse.git
+   cd InvoiceMuse
    ```
 
 2. **Install Dependencies:**
@@ -325,9 +325,9 @@ docker exec -it invoiceplane-db mysql -u ipdevdb -pipdevdb invoiceplane_db
 - Access `http://your-domain.com/index.php/setup` to complete the installation.
 - It will guide you through the install wizard.
 - Log in with the credentials you provided in the wizard
-- In the `settings` you can set up InvoicePlane to your liking
+- In the `settings` you can set up InvoiceMuse to your liking
 - Add `Invoice Groups`, `Product Families`, `Product Units`, etcetera
-- Start using InvoicePlane
+- Start using InvoiceMuse
 
 ---
 
@@ -335,6 +335,6 @@ docker exec -it invoiceplane-db mysql -u ipdevdb -pipdevdb invoiceplane_db
 
 If you encounter issues during installation or setup, follow these steps:
 
-1. **Visit the [Community Forums](https://community.invoiceplane.com/)** - Engage with other users and developers for help.
-2. **Join our [Discord Server](https://discord.gg/PPzD2hTrXt)** - Get real-time assistance from the community.
-3. **Check the [InvoicePlane Wiki](https://wiki.invoiceplane.com/)** - Look for documented solutions to common problems.
+1. **Check the [InvoicePlane Wiki](https://wiki.invoiceplane.com/)** - InvoiceMuse is based on InvoicePlane, so its documented solutions to common problems usually apply.
+2. **Search the [InvoicePlane Community Forums](https://community.invoiceplane.com/)** - Upstream discussions often cover the same setup issues.
+3. **Open an issue in the [InvoiceMuse repository](https://github.com/dnp-g2/InvoiceMuse/issues)** - Report problems specific to InvoiceMuse.

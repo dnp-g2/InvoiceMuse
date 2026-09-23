@@ -10,7 +10,7 @@
 <html class="no-js" lang="en"> <!--<![endif]-->
 
 <head>
-    <title><?php echo get_setting('custom_title', 'InvoicePlane', true); ?> - <?php _trans('password_reset'); ?></title>
+    <title><?php echo get_setting('custom_title', 'InvoiceMuse', true); ?> - <?php _trans('password_reset'); ?></title>
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">

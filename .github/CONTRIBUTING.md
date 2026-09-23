@@ -1,6 +1,6 @@
-# Contributing to InvoicePlane
+# Contributing to InvoiceMuse
 
-Thank you for considering contributing to InvoicePlane! Your support is invaluable in improving and maintaining this project. Whether you're reporting bugs, suggesting features, writing code, or helping others, your contributions are welcome.
+Thank you for considering contributing to InvoiceMuse! Your support is invaluable in improving and maintaining this project. Whether you're reporting bugs, suggesting features, writing code, or helping others, your contributions are welcome.
 
 ## Table of Contents
 
@@ -24,20 +24,20 @@ Thank you for considering contributing to InvoicePlane! Your support is invaluab
 
 ### Reporting Bugs
 
-If you encounter a bug, please report it by [opening an issue](https://github.com/InvoicePlane/InvoicePlane/issues) and include:
+If you encounter a bug, please report it by [opening an issue](https://github.com/dnp-g2/InvoiceMuse/issues) and include:
 
 - **Description:** A clear and concise description of the bug.
 - **Steps to Reproduce:** Detailed steps to reproduce the issue.
 - **Expected Behavior:** What you expected to happen.
 - **Actual Behavior:** What actually happened.
 - **Screenshots:** If applicable, add screenshots to help explain the problem.
-- **Environment:** Information about your environment (e.g., operating system, browser, InvoicePlane version).
+- **Environment:** Information about your environment (e.g., operating system, browser, InvoiceMuse version).
 
 ---
 
 ### Suggesting Features
 
-To suggest a new feature, please [open an issue](https://github.com/InvoicePlane/InvoicePlane/issues) and include:
+To suggest a new feature, please [open an issue](https://github.com/dnp-g2/InvoiceMuse/issues) and include:
 
 - **Feature Description:** A clear and concise description of the feature.
 - **Use Case:** Explain why this feature would be useful.
@@ -49,10 +49,10 @@ To suggest a new feature, please [open an issue](https://github.com/InvoicePlane
 
 If you'd like to contribute code:
 
-1. **Fork the Repository:** Click the "Fork" button at the top right of the [repository page](https://github.com/InvoicePlane/InvoicePlane).
+1. **Fork the Repository:** Click the "Fork" button at the top right of the [repository page](https://github.com/dnp-g2/InvoiceMuse).
 2. **Clone Your Fork:**
    ```sh
-   git clone https://github.com/your-username/InvoicePlane.git
+   git clone https://github.com/your-username/InvoiceMuse.git
    ```
 3. **Create a Branch:**
    ```sh
@@ -67,7 +67,7 @@ If you'd like to contribute code:
    ```sh
    git push origin feature/your-feature-name
    ```
-7. **Open a Pull Request:** Go to the original repository and [open a pull request](https://github.com/InvoicePlane/InvoicePlane/pulls) from your fork.
+7. **Open a Pull Request:** Go to the original repository and [open a pull request](https://github.com/dnp-g2/InvoiceMuse/pulls) from your fork.
 
 Please ensure your code adheres to the [Development Guidelines](#development-guidelines) and includes appropriate tests.
 
@@ -91,7 +91,7 @@ To contribute to the documentation:
 
 ### Translations
 
-Help make InvoicePlane accessible to a global audience by contributing translations:
+Help make InvoiceMuse accessible to a global audience by contributing translations:
 
 - **Check Existing Translations:** See if your language is already supported.
 - **Improve Translations:** Enhance existing translations for clarity and accuracy.
@@ -103,15 +103,14 @@ Please refer to the [TRANSLATIONS.md](TRANSLATIONS.md) for detailed instructions
 
 ### Community Support
 
-Engage with the InvoicePlane community by:
+Help other InvoiceMuse users by:
 
-- **Answering Questions:** Assist others, Help answer questions and contribute to discussions in the [Community Forums](https://community.invoiceplane.com/).
+- **[Participating in GitHub Issues](https://github.com/dnp-g2/InvoiceMuse/issues)** - Join bug reports, feature requests, discussions, and feature planning.
 
-- **[Discord Collaboration](https://discord.gg/PPzD2hTrXt)** - Join the live chat for quick discussions and collaboration.
+- **Helping with Troubleshooting:** Suggest solutions in open issues.
 
-- **[Participate in GitHub Issues](https://github.com/InvoicePlane/InvoicePlane/issues)** - Participate in bug reports, feature requests, and discussions and feature planning.
-
-- **Helping with Troubleshooting:** Provide solutions and suggestions in support threads on the [Community Forums](https://community.invoiceplane.com/) and on [Discord](https://discord.gg/PPzD2hTrXt)
+Questions about behavior InvoiceMuse shares with InvoicePlane are often already answered in the
+[InvoicePlane Community Forums](https://community.invoiceplane.com/).
 
 ---
 
@@ -125,8 +124,8 @@ Follow the three-phase development workflow outlined in [INSTALLATION.md](docs/I
 
 1. **Clone the Repository**
    ```sh
-   git clone https://github.com/InvoicePlane/InvoicePlane.git
-   cd InvoicePlane
+   git clone https://github.com/dnp-g2/InvoiceMuse.git
+   cd InvoiceMuse
    ```
 
 2. **Install Dependencies**
@@ -149,7 +148,7 @@ Two Docker setups are available — see [resources/docker/README.md](../resource
 for the full comparison; pick whichever matches what you're doing:
 
 - **[`compose.yml`](../compose.yml)** — self-contained, one command, good for quickly spinning
-  up InvoicePlane to test something.
+  up InvoiceMuse to test something.
 - **[`docker-compose.yml`](../docker-compose.yml)** — separated `php`/`nginx`/`db`/`phpmyadmin`
   services that bind-mount your working tree, so PHP/frontend edits are reflected immediately
   without a rebuild. **This is what you want for active development.**
@@ -164,7 +163,7 @@ Add `127.0.0.1 ivpl.local` to your `/etc/hosts` file first — the bundled nginx
 that hostname (see [resources/docker/README.md](../resources/docker/README.md) for why).
 
 Access:
-- **InvoicePlane**: http://ivpl.local
+- **InvoiceMuse**: http://ivpl.local
 - **phpMyAdmin**: http://localhost:8081
 
 #### Phase 3: Workflow (Daily Development)
@@ -184,22 +183,20 @@ For detailed workflow instructions, see [INSTALLATION.md - Development Workflow]
 
 ### Testing
 
-- Testing is very much appreciated, especially during Beta phases. Click through all functionalities of the application and check if you see weird behavior (for example: uploads not working anymore after a new Beta version of InvoicePlane), mention it in the community (Discord, community.invoiceplane.com forums) and see if an issue should be made.
+- Testing is very much appreciated, especially during Beta phases. Click through all functionalities of the application and check if you see weird behavior (for example: uploads not working anymore after a new Beta version of InvoiceMuse), report it in a [GitHub issue](https://github.com/dnp-g2/InvoiceMuse/issues).
 
 ### Branching Strategy
 
-- `development` **Active** development
-- `bugfix/*` For bug fixes. Please refer to an issue, if you have one.
-- `feature/*` New features. Please refer to an issue, if you have one.
-
-- `master` **Stable releases**. Every time a new version of InvoicePlane goes live, that same version is available in the `master` branch.
+- `main` **Default branch.** Open pull requests against `main`.
+- `fix/*` For bug fixes. Please refer to an issue, if you have one.
+- `feat/*` New features. Please refer to an issue, if you have one.
 
 ---
 
 ## Community and Support
 
-- **[Community Forums](https://community.invoiceplane.com/)** - Ask questions and share knowledge.
-- **[GitHub Issues](https://github.com/InvoicePlane/InvoicePlane/issues)** - Report bugs and request features.
+- **[GitHub Issues](https://github.com/dnp-g2/InvoiceMuse/issues)** - Report bugs, request features, and ask questions.
+- **[InvoicePlane Community Forums](https://community.invoiceplane.com/)** - Upstream knowledge that often applies to InvoiceMuse.
 
 ---
 

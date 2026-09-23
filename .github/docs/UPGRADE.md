@@ -1,12 +1,42 @@
 # Upgrade Guide
 
-This guide provides instructions for upgrading InvoicePlane to newer versions.
+This guide explains how to upgrade InvoiceMuse and how to move an InvoicePlane installation to InvoiceMuse.
 
 ## Table of Contents
 
+- [Moving from InvoicePlane to InvoiceMuse](#moving-from-invoiceplane-to-invoicemuse)
 - [Instructions to upgrade to 1.7.2 from 1.7.0 / 1.7.1](#instructions-to-upgrade-to-172-from-170--171)
 - [Instructions to upgrade to 1.6.3 from 1.6.2](#instructions-to-upgrade-to-163-from-162)
 - [Instructions to upgrade to 1.6.0 from 1.5.11](#instructions-to-upgrade-to-160-from-1511)
+
+---
+
+## Moving from InvoicePlane to InvoiceMuse
+
+InvoiceMuse renames the bundled invoice and quote templates:
+
+| InvoicePlane name | InvoiceMuse name |
+|-------------------|------------------|
+| `InvoicePlane` | `InvoiceMuse` |
+| `InvoicePlane - paid` | `InvoiceMuse - paid` |
+| `InvoicePlane - overdue` | `InvoiceMuse - overdue` |
+| `InvoicePlane_Web` | `InvoiceMuse_Web` |
+
+1. Back up your database and all files.
+2. Copy the InvoiceMuse files into your installation root, keeping the files listed under
+   [Replace files](#2-replace-files) (`ipconfig.php`, custom templates, custom styles, uploads
+   and custom language keys).
+3. Run the database migration: open `http://yourdomain.com/index.php/setup`, or run
+   `php index.php setup/cli/migrate`. Containers run it automatically on start. Migration
+   `045_1.7.3.sql` points the saved PDF and public template settings, and the PDF template chosen
+   in each email template, at the new names. Custom template names are left unchanged.
+4. If a custom template includes one of the old files (for example
+   `include APPPATH . 'views/invoice_templates/pdf/InvoicePlane.php';`), change it to the new
+   file name. After that, the old `InvoicePlane*.php` files in `application/views/` are unused and
+   can be deleted.
+
+Until the migration runs, PDFs fall back to the `InvoiceMuse` template and paid or overdue
+invoices render without their stamp.
 
 ---
 
@@ -99,7 +129,7 @@ are required:
    <CUSTOM_TEMPLATES_FOLDER>/quote_templates/pdf/MyTemplate.php
    <CUSTOM_TEMPLATES_FOLDER>/quote_templates/public/MyTemplate.php
    ```
-   `CUSTOM_TEMPLATES_FOLDER` only tells InvoicePlane where the file lives on disk at render
+   `CUSTOM_TEMPLATES_FOLDER` only tells InvoiceMuse where the file lives on disk at render
    time. On its own it adds **nothing** to the selector.
 
 2. **Add the template name** (without `.php`) to the matching allowlist variable in
@@ -123,9 +153,9 @@ if you previously kept custom templates inside `application/views/`.
 
 **Upgrade aid:** After upgrading and running `/setup`, the Settings page checks the saved PDF
 and public template settings in the database. If one of those settings names a template that is
-not built in and not present in the matching `CUSTOM_*_TEMPLATES` allowlist, InvoicePlane shows
+not built in and not present in the matching `CUSTOM_*_TEMPLATES` allowlist, InvoiceMuse shows
 an administrator warning with the exact template name and `ipconfig.php` variable to update.
-This warning intentionally uses only saved database settings; InvoicePlane still does not scan
+This warning intentionally uses only saved database settings; InvoiceMuse still does not scan
 template folders to discover unused template files.
 
 #### 4. Template whitelist now covers only built-in templates
@@ -146,11 +176,11 @@ allowlist variable:
 
 ```ini
 # ipconfig.php
-CUSTOM_TEMPLATES_FOLDER=/srv/invoiceplane-templates/
+CUSTOM_TEMPLATES_FOLDER=/srv/invoicemuse-templates/
 CUSTOM_INVOICE_TEMPLATES_PDF="MyCustomTemplate"
 ```
 
-Then place your templates in e.g. `/srv/invoiceplane-templates/invoice_templates/pdf/MyTemplate.php`.
+Then place your templates in e.g. `/srv/invoicemuse-templates/invoice_templates/pdf/MyTemplate.php`.
 See section #3 above for the full two-step process.
 
 Alternatively, if you prefer to keep templates inside the application, add each template name
@@ -159,9 +189,9 @@ to the appropriate constant in `application/modules/invoices/models/Mdl_template
 ```php
 private const ALLOWED_INVOICE_TEMPLATES = [
     'pdf' => [
-        'InvoicePlane',
-        'InvoicePlane - paid',
-        'InvoicePlane - overdue',
+        'InvoiceMuse',
+        'InvoiceMuse - paid',
+        'InvoiceMuse - overdue',
         'MyCustomTemplate',  // ← add your template name here
     ],
     // ...
@@ -176,7 +206,7 @@ before applying the upgrade, especially if you are upgrading from v1.7.0 or v1.7
 ### 2. Replace files
 
 1. Back up your database and all files.
-2. Copy all new files to your InvoicePlane installation root, but **do not overwrite**:
+2. Copy all new files to your installation root, but **do not overwrite**:
    - `ipconfig.php`
    - Custom templates in `application/views/` (better: move them to `CUSTOM_TEMPLATES_FOLDER`)
    - Custom styles: `assets/core/css/custom.css`, `assets/core/css/custom-pdf.css`
@@ -189,7 +219,7 @@ Open `http://yourdomain.com/index.php/setup` and follow the on-screen instructio
 setup wizard runs the required database migrations automatically, including adding the
 `user_passwordreset_token_expiry` column for the password reset token expiry fix.
 
-After `/setup` completes, log in as an administrator and open **Settings**. If InvoicePlane
+After `/setup` completes, log in as an administrator and open **Settings**. If InvoiceMuse
 finds saved custom template names that are not listed in `ipconfig.php`, it shows a warning
 with the names to copy into `CUSTOM_INVOICE_TEMPLATES_PDF`,
 `CUSTOM_INVOICE_TEMPLATES_PUBLIC`, `CUSTOM_QUOTE_TEMPLATES_PDF`, or
@@ -229,14 +259,14 @@ Follow the procedure outlined in [Upgrade 1.6.0 from 1.5.11](#1-preliminary-oper
 
 ### 2. Replace files & test
 
-1. Copy all files to the root directory of your InvoicePlane installation but **do not** overwrite the following files:
+1. Copy all files to the root directory of your installation but **do not** overwrite the following files:
    - The `ipconfig.php` file
    - Customized templates in the `application/views/` folder
    - The files for custom styles: `assets/core/css/custom.css` and `assets/core/css/custom-pdf.css`
    - Uploaded images in the `uploads/` folder (e.g. your company logo)
    - Custom language keys at `application/language/COUNTRY/custom_lang.php`
 
-   > **Hint:** An *easy* way of performing this operation is to upload the whole new InvoicePlane version in a different folder, outside of your current installation root folder, and copy the above mentioned files in the new folder you just uploaded. Afterwards just rename your current folder to something like `my_current_folder_old` and rename your new-version-folder with the name of `my_current_folder`.
+   > **Hint:** An *easy* way of performing this operation is to upload the whole new version in a different folder, outside of your current installation root folder, and copy the above mentioned files in the new folder you just uploaded. Afterwards just rename your current folder to something like `my_current_folder_old` and rename your new-version-folder with the name of `my_current_folder`.
 
 2. Open `http://yourdomain.com/index.php/setup` and follow the instructions. The app will run all updates on its own.
    - If you encounter any errors when upgrading the table, press "Try Again" to resolve those errors and continue with the setup.
@@ -251,18 +281,18 @@ Follow the procedure outlined in [Upgrade 1.6.0 from 1.5.11](#1-preliminary-oper
 
 1. Make a backup of your database and all files. (This is **very important** to prevent any data loss)
 
-2. Download the latest version from [InvoicePlane.com](https://invoiceplane.com/downloads).
+2. Download the latest version from [InvoiceMuse Releases](https://github.com/dnp-g2/InvoiceMuse/releases).
 
 ### 2. Replace files & test
 
-1. Copy all files to the root directory of your InvoicePlane installation but **do not** overwrite the following files:
+1. Copy all files to the root directory of your installation but **do not** overwrite the following files:
    - The `ipconfig.php` file
    - Customized templates in the `application/views/` folder
    - The files for custom styles: `assets/core/css/custom.css` and `assets/core/css/custom-pdf.css`
    - Uploaded images in the `uploads/` folder (e.g. your company logo)
    - Custom language keys at `application/language/COUNTRY/custom_lang.php`
 
-   > **Hint:** An *easy* way of performing this operation is to upload the whole new InvoicePlane version in a different folder, outside of your current installation root folder, and copy the above mentioned files in the new folder you just uploaded. Afterwards just rename your current folder to something like `my_current_folder_old` and rename your new-version-folder with the name of `my_current_folder`.
+   > **Hint:** An *easy* way of performing this operation is to upload the whole new version in a different folder, outside of your current installation root folder, and copy the above mentioned files in the new folder you just uploaded. Afterwards just rename your current folder to something like `my_current_folder_old` and rename your new-version-folder with the name of `my_current_folder`.
 
 2. Now that the files are placed, it's time to fix the `ipconfig.php` file.
    - Open `ipconfig.php` and comment out the top line in the file by adding a `#` at the beginning of the first line. The result should be like this:
@@ -280,4 +310,4 @@ Follow the procedure outlined in [Upgrade 1.6.0 from 1.5.11](#1-preliminary-oper
 
 ---
 
-> **Note:** For additional help and support, visit the [official wiki](https://wiki.invoiceplane.com) or the [community forum](https://community.invoiceplane.com/).
+> **Note:** For additional help, the [InvoicePlane wiki](https://wiki.invoiceplane.com) and [InvoicePlane community forum](https://community.invoiceplane.com/) also apply to InvoiceMuse. Report InvoiceMuse problems in [its issue tracker](https://github.com/dnp-g2/InvoiceMuse/issues).

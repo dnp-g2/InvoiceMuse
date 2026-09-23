@@ -1,7 +1,7 @@
 {
-    "name": "invoiceplane/invoiceplane",
-    "description": "InvoicePlane is a self-hosted open source application for managing your invoices, clients and payments",
-    "homepage": "https://invoiceplane.com",
+    "name": "dnp-g2/invoicemuse",
+    "description": "InvoiceMuse is a self-hosted open source application for managing invoices, clients, and payments. Based on InvoicePlane.",
+    "homepage": "https://github.com/dnp-g2/InvoiceMuse",
     "license": "MIT",
     "type": "project",
     "config": {
