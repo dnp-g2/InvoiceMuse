@@ -45,7 +45,7 @@ switch ($invoice_mode) {
     <link rel="stylesheet" href="<?php _theme_asset('css/templates.css'); ?>" type="text/css">
     <link rel="stylesheet" href="<?php _core_asset('css/custom-pdf.css'); ?>" type="text/css">
 </head>
-<body><?php if (!empty($invoice->property_incomplete)) { ?><div style="padding:14px;border:3px solid #a00;color:#a00;font-size:20px">DRAFT — INCOMPLETE: assign all service properties and save before issuing.</div><?php } ?>
+<body><?php if (!empty($invoice->property_incomplete)) { ?><div style="padding:14px;border:3px solid #a00;color:#a00;font-size:20px">INCOMPLETE DRAFT: assign all service properties and save before issuing.</div><?php } ?>
 <header class="clearfix">
 
     <div id="logo">

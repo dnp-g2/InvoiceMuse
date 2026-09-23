@@ -14,7 +14,7 @@ $property_issues = service_properties()->problems($property_type, $property_id);
 ?>
 <div class="panel panel-default" style="margin:12px" id="property-toolbar"><div class="panel-body">
 <?php if ($property_frozen) { ?><p>These document addresses are locked. Copy to a new draft to change service properties.</p><?php } ?>
-<strong>Service properties</strong> — each charge belongs to a property; billing stays with this customer.
+<strong>Service properties:</strong> each charge belongs to a property; billing stays with this customer.
 <a href="<?php echo site_url('service-properties/client/' . (int) $property_document->client_id); ?>" target="_blank">Manage properties</a>
 <a class="btn btn-default btn-sm" href="<?php echo site_url('service-properties/preview/' . $property_type . '/' . $property_id); ?>" target="_blank">Preview draft</a>
 <?php if ( ! $property_frozen) { ?><div style="margin-top:8px"><select id="property-assign" class="form-control" style="display:inline-block;max-width:420px"><option value="">Select property for unassigned lines</option>

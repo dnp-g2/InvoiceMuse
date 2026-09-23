@@ -38,7 +38,7 @@ $display = static function (string $group, array $fields): string {
         <div class="alert alert-warning"><?php echo html_escape($error); ?></div>
 <?php } ?>
 <?php if ($review['matches']) { ?>
-        <p><strong>Possible matching customers</strong> — choose one to review changes:</p>
+        <p><strong>Possible matching customers.</strong> Choose one to review changes:</p>
         <ul>
 <?php foreach ($review['matches'] as $match) { ?>
             <li><a href="<?php echo site_url('client-updates/view/' . (int)$request->request_id) . '?customer=' . (int)$match['client_id']; ?>"><?php echo html_escape(trim($match['client_name'] . ' ' . $match['client_surname'])); ?></a> · <?php echo $match['client_active'] ? 'Active' : 'Inactive'; ?> · <?php echo html_escape($match['client_email']); ?></li>
