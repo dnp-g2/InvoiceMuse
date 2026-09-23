@@ -435,6 +435,23 @@ class Mdl_Setup extends CI_Model
         $this->notify_missing_allowlisted_templates();
     }
 
+    /**
+     * Backfill the column 043_1.7.2.sql gained after it first shipped. Installs that ran the
+     * original one-line 043 have it recorded in ip_versions and never received the column.
+     * Checked in PHP because MySQL has no ADD COLUMN IF NOT EXISTS.
+     */
+    public function upgrade_046_1_7_3()
+    {
+        if ($this->db->field_exists('user_passwordreset_token_expiry', 'ip_users')) {
+            return;
+        }
+
+        if ( ! $this->db->query('ALTER TABLE `ip_users` ADD COLUMN `user_passwordreset_token_expiry` DATETIME NULL DEFAULT NULL AFTER `user_passwordreset_token`')) {
+            $error          = $this->db->error();
+            $this->errors[] = '046_1.7.3: ' . $error['message'];
+        }
+    }
+
     private function notify_missing_allowlisted_templates(): void
     {
         if ( ! $this->session->userdata('is_upgrade')) {
