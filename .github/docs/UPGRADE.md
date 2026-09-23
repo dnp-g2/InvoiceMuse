@@ -29,7 +29,11 @@ InvoiceMuse renames the bundled invoice and quote templates:
 3. Run the database migration: open `http://yourdomain.com/index.php/setup`, or run
    `php index.php setup/cli/migrate`. Containers run it automatically on start. Migration
    `045_1.7.3.sql` points the saved PDF and public template settings, and the PDF template chosen
-   in each email template, at the new names. Custom template names are left unchanged.
+   in each email template, at the new names. An old name stays when it belongs to a custom
+   template: listed in a `CUSTOM_*_TEMPLATES` setting, or overridden by a file of that name in
+   `CUSTOM_TEMPLATES_FOLDER`. If such a file is not listed yet, **Settings** shows a warning with
+   the name to add to the matching `CUSTOM_*_TEMPLATES` setting; until then the bundled
+   `InvoiceMuse` template is used.
 4. If a custom template includes one of the old files (for example
    `include APPPATH . 'views/invoice_templates/pdf/InvoicePlane.php';`), change it to the new
    file name. After that, the old `InvoicePlane*.php` files in `application/views/` are unused and

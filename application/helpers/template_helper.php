@@ -29,27 +29,41 @@ if ( ! defined('BASEPATH')) {
  */
 function render_template_view(string $template_subpath, array $data, bool $return = false)
 {
-    if (CUSTOM_TEMPLATES_FOLDER) {
-        $has_ext   = (bool) pathinfo($template_subpath, PATHINFO_EXTENSION);
-        $file_path = CUSTOM_TEMPLATES_FOLDER . $template_subpath . ($has_ext ? '' : '.php');
-        if (file_exists($file_path)) {
-            extract($data);
-            ob_start();
-            include $file_path;
-            $output = ob_get_clean();
-            if ($return) {
-                return $output;
-            }
-            $CI = &get_instance();
-            $CI->output->append_output($output);
-
-            return;
+    $file_path = custom_template_file($template_subpath);
+    if ($file_path !== null) {
+        extract($data);
+        ob_start();
+        include $file_path;
+        $output = ob_get_clean();
+        if ($return) {
+            return $output;
         }
+        $CI = &get_instance();
+        $CI->output->append_output($output);
+
+        return;
     }
 
     $CI = &get_instance();
 
     return $CI->load->view($template_subpath, $data, $return);
+}
+
+/**
+ * Path of the CUSTOM_TEMPLATES_FOLDER copy of a template, or null when there is none.
+ *
+ * @param string $template_subpath e.g. 'invoice_templates/pdf/MyTemplate', with or without '.php'
+ */
+function custom_template_file(string $template_subpath): ?string
+{
+    if ( ! CUSTOM_TEMPLATES_FOLDER) {
+        return null;
+    }
+
+    $has_ext   = (bool) pathinfo($template_subpath, PATHINFO_EXTENSION);
+    $file_path = CUSTOM_TEMPLATES_FOLDER . $template_subpath . ($has_ext ? '' : '.php');
+
+    return file_exists($file_path) ? $file_path : null;
 }
 
 /**
@@ -440,6 +454,21 @@ function get_validated_template_path($template_name, $type = 'invoice', $scope =
     // This prevents path traversal attacks through the type/scope parameters.
     $template_dir  = $type . '_templates/' . $scope;
     $template_path = APPPATH . 'views/' . $template_dir . '/' . $validated_name . '.php';
+
+    // render_template_view() gives a CUSTOM_TEMPLATES_FOLDER copy precedence, so use it when present
+    $custom_path = custom_template_file($template_dir . '/' . $validated_name);
+    if ($custom_path !== null) {
+        // Defense-in-depth: Validate the custom copy is within the custom templates directory
+        if ( ! validate_file_in_directory($custom_path, CUSTOM_TEMPLATES_FOLDER . $template_dir)) {
+            log_message('error', 'Custom template path validation failed: ' . sanitize_for_logging($validated_name));
+            show_error('Template system error. Please contact administrator.', 500);
+        }
+
+        return [
+            'path' => $template_dir . '/' . $validated_name . '.php',
+            'name' => $validated_name,
+        ];
+    }
 
     // Defense-in-depth: Validate template path is within allowed directory before checking existence
     $base_directory = APPPATH . 'views/' . $template_dir;

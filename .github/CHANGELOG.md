@@ -17,7 +17,7 @@ record *why* and *how*.
 ### Changed
 
 - **Rebranded as InvoiceMuse.** InvoiceMuse is based on [InvoicePlane](https://www.invoiceplane.com/), and the admin and setup pages now carry a credit thanking its developers and contributors. The upstream copyright and MIT license notice remain in `LICENSE.txt`. Removed the Settings update check and news feed, which queried InvoicePlane's update and news services.
-- **Bundled templates renamed.** `InvoicePlane`, `InvoicePlane - paid`, `InvoicePlane - overdue` and `InvoicePlane_Web` are now `InvoiceMuse`, `InvoiceMuse - paid`, `InvoiceMuse - overdue` and `InvoiceMuse_Web`. Migration `045_1.7.3.sql` updates saved template settings and email template PDF choices; until it runs, PDFs fall back to the `InvoiceMuse` template without paid/overdue stamps. Custom templates that include the old files need the new file names. See [UPGRADE.md](docs/UPGRADE.md#moving-from-invoiceplane-to-invoicemuse).
+- **Bundled templates renamed.** `InvoicePlane`, `InvoicePlane - paid`, `InvoicePlane - overdue` and `InvoicePlane_Web` are now `InvoiceMuse`, `InvoiceMuse - paid`, `InvoiceMuse - overdue` and `InvoiceMuse_Web`. Migration `045_1.7.3.sql` updates saved template settings and email template PDF choices, keeping any old name that belongs to a custom template in `CUSTOM_TEMPLATES_FOLDER` or a `CUSTOM_*_TEMPLATES` allowlist; until it runs, PDFs fall back to the `InvoiceMuse` template without paid/overdue stamps. Custom templates that include the old files need the new file names. Allowlisted custom public templates stored only in `CUSTOM_TEMPLATES_FOLDER` now load on public invoice and quote pages. See [UPGRADE.md](docs/UPGRADE.md#moving-from-invoiceplane-to-invoicemuse).
 
 ### Security fixes
 
