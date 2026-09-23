@@ -55,14 +55,74 @@ function render_template_view(string $template_subpath, array $data, bool $retur
 /**
  * Parse a template by predefined template tags.
  *
+ * $escape_values controls whether each substituted value is HTML-escaped
+ * before being inserted. Defaults to false to preserve this function's other
+ * callers: QrCode.php substitutes into plain SEPA/EPC remittance text (escaping
+ * would corrupt the QR payload), and the two template views that call this
+ * already wrap the whole result in _htmlsc() themselves, which would double-
+ * escape if this also escaped. Pass true only when $body is genuinely
+ * rendered as HTML and isn't already escaped by the caller — e.g. the HTML
+ * email body in email_invoice()/email_quote(), where these substituted
+ * values (client_name, custom field values, etc.) previously went in raw.
+ *
  * @param $object
  * @param $body
- * @param $model_id
  *
  * @return mixed
  */
-function parse_template($object, $body)
+function parse_template($object, $body, bool $escape_values = false)
 {
+    $allowed_properties = [
+        'client_name',
+        'client_surname',
+        'client_address_1',
+        'client_address_2',
+        'client_city',
+        'client_state',
+        'client_zip',
+        'client_country',
+        'client_phone',
+        'client_fax',
+        'client_mobile',
+        'client_email',
+        'client_web',
+        'client_vat_id',
+        'client_tax_code',
+        'client_avs',
+        'client_insurednumber',
+        'client_weka',
+        'user_name',
+        'user_company',
+        'user_address_1',
+        'user_address_2',
+        'user_city',
+        'user_state',
+        'user_zip',
+        'user_country',
+        'user_phone',
+        'user_fax',
+        'user_mobile',
+        'user_email',
+        'user_web',
+        'user_vat_id',
+        'user_tax_code',
+        'user_bank',
+        'user_iban',
+        'user_bic',
+        'user_subscribernumber',
+        'user_gln',
+        'user_rcc',
+        'invoice_number',
+        'invoice_terms',
+        'quote_number',
+        'sumex_reason',
+        'sumex_diagnosis',
+        'sumex_observations',
+        'sumex_treatmentstart',
+        'sumex_treatmentend',
+        'sumex_casenumber',
+    ];
+
     if (preg_match_all('/{{{([^{|}]*)}}}/', $body, $template_vars)) {
         foreach ($template_vars[1] as $var) {
             switch ($var) {
@@ -141,8 +201,14 @@ function parse_template($object, $body)
                             $replace = '';
                         }
                     } else {
-                        $replace = $object->{$var} ?? $var;
+                        $replace = in_array($var, $allowed_properties, true) && property_exists($object, $var)
+                            ? $object->{$var}
+                            : '';
                     }
+            }
+
+            if ($escape_values) {
+                $replace = htmlspecialchars((string) $replace, ENT_QUOTES, 'UTF-8');
             }
 
             $body = str_replace('{{{' . $var . '}}}', $replace, $body);
@@ -155,7 +221,7 @@ function parse_template($object, $body)
 /**
  * Returns the translated invoice status.
  *
- * @param $invoice->invoice_status_id
+ * @param $id
  *
  * @return string
  */

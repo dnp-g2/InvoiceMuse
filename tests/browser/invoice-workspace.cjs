@@ -81,10 +81,13 @@ const base = 'http://127.0.0.1:18888/index.php/';
     await added.locator('[name=item_quantity]').fill('1');
     await added.locator('[name=item_price]').fill('120');
     await page.locator('#invoice-settings > summary').click();
-    await page.locator('#invoice_number').fill('invalid#number');
-    let response = page.waitForResponse(r=>r.url().endsWith('/invoices/ajax/save'));
+    await page.locator('#invoice_number').fill('invalid<number');
+    // Read the body in flight: Chrome keeps no copy of no-store responses for response.json().
+    let rejected;
+    await page.route('**/invoices/ajax/save', async route => { const res = await route.fetch(); const body = await res.text(); rejected = JSON.parse(body); await route.fulfill({response: res, body}); }, {times: 1});
     await page.locator('#btn_save_invoice').click();
-    assert.equal((await (await response).json()).success,0);
+    await page.locator('#invoice-errors').waitFor({state: 'visible'});
+    assert.equal(rejected.success,0);
     assert.equal(await added.locator('[name=item_price]').inputValue(),'120');
     await page.locator('#invoice_number').fill('WORKSPACE-'+id);
     await page.locator('#invoice_status_id').selectOption('2');

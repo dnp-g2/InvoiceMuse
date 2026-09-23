@@ -28,6 +28,7 @@ class Stripe extends Base_Controller
         $this->load->library('crypt');
         $this->load->model('invoices/mdl_invoices');
         $this->load->helper('file_security');
+        $this->load->helper(['currency', 'stripe']);
 
         $this->stripe = new StripeClient($this->crypt->decode(get_setting('gateway_stripe_apiKey')));
     }
@@ -71,7 +72,7 @@ class Stripe extends Base_Controller
                 [
                     'price_data' => [
                         'currency'     => get_setting('gateway_stripe_currency'),
-                        'unit_amount'  => $invoice->invoice_balance * 100,
+                        'unit_amount'  => amount_to_minor_units($invoice->invoice_balance, stripe_minor_unit_multiplier(get_setting('gateway_stripe_currency'))),
                         'product_data' => [
                             'name' => trans('invoice') . ' #' . $invoice->invoice_number,
                         ],
@@ -99,7 +100,7 @@ class Stripe extends Base_Controller
             $session = $this->stripe->checkout->sessions->retrieve($checkout_session_id);
 
             // Debug logging
-            log_message('debug', __CLASS__ . '::' . __FUNCTION__ . ' reached, status: ' . $session->status . ' payment_status: ' . $session->payment_status . ', checkout_session_id: ' . $checkout_session_id);
+            log_message('debug', __CLASS__ . '::' . __FUNCTION__ . ' reached, status: ' . $session->status . ' payment_status: ' . $session->payment_status . ', checkout_session_id: ' . sanitize_for_logging($checkout_session_id));
 
             // Determine which invoice we’re dealing with
             $invoice_key = $session->client_reference_id;
@@ -145,15 +146,38 @@ class Stripe extends Base_Controller
                     $paid     = false; // Mark as not paid to show info message instead of success
                     $user_msg = trans('invoice_already_paid');
                 } else {
-                    // Save the payment (visible in guest user)
-                    $this->mdl_payments->save(null, [
-                        'invoice_id'          => $invoice->invoice_id,
-                        'payment_date'        => date('Y-m-d'),
-                        'payment_amount'      => $session->amount_total / 100,
-                        'payment_method_id'   => get_setting('gateway_stripe_payment_method'),
-                        'payment_note'        => trans('online_payment_intent_id') . ': ' . $payment_intent,
-                        'payment_external_id' => $payment_intent,
-                    ]);
+                    // Validate currency and amount before recording payment
+                    $expected_currency = mb_strtoupper((string) get_setting('gateway_stripe_currency'));
+                    $capture_currency  = mb_strtoupper((string) ($session->currency ?? ''));
+                    $capture_amount    = amount_from_minor_units($session->amount_total, stripe_minor_unit_multiplier($capture_currency));
+
+                    if ($capture_currency !== $expected_currency) {
+                        log_message('error', __CLASS__ . '::' . __FUNCTION__ . ' - Rejected capture: currency mismatch for invoice ' . sanitize_for_logging($invoice_key) . '. Expected: ' . $expected_currency . ', received: ' . $capture_currency);
+                        $paid     = false;
+                        $user_msg = trans('online_payment_payment_failed');
+                    } elseif ((float) $capture_amount + 0.0001 < (float) $invoice->invoice_balance) {
+                        log_message('error', __CLASS__ . '::' . __FUNCTION__ . ' - Rejected capture: amount mismatch for invoice ' . sanitize_for_logging($invoice_key) . '. Expected: ' . sanitize_for_logging($invoice->invoice_balance) . ', received: ' . sanitize_for_logging($capture_amount));
+                        $paid     = false;
+                        $user_msg = trans('online_payment_payment_failed');
+                    } else {
+                        // Record the payment atomically: the balance guard and
+                        // the insert are one conditional UPDATE, so a concurrent
+                        // callback with a different payment_intent cannot also
+                        // pass a stale balance and double-credit the invoice.
+                        $recorded = $this->mdl_payments->record_external_payment([
+                            'invoice_id'          => $invoice->invoice_id,
+                            'payment_date'        => date('Y-m-d'),
+                            'payment_amount'      => $capture_amount,
+                            'payment_method_id'   => get_setting('gateway_stripe_payment_method'),
+                            'payment_note'        => trans('online_payment_intent_id') . ': ' . $payment_intent,
+                            'payment_external_id' => $payment_intent,
+                        ]);
+
+                        if ( ! $recorded) {
+                            $paid     = false;
+                            $user_msg = trans('online_payment_already_processed');
+                        }
+                    }
                 }
             }
 
@@ -161,19 +185,19 @@ class Stripe extends Base_Controller
             // Admin (& error log) message
             $response = $paid ? '. livemode: ' . trans($session->livemode ? 'yes' : 'no')
                                 . ', currency: ' . $session->currency
-                                . ', amount: ' . ($session->amount_received / 100)              // 0 in test. Set in live mode?
-                                . ', fee: ' . ($session->application_fee_amount / 100)       // 0 in test. Set in live mode?
+                                . ', amount: ' . amount_from_minor_units($session->amount_received, stripe_minor_unit_multiplier($session->currency))              // 0 in test. Set in live mode?
+                                . ', fee: ' . amount_from_minor_units($session->application_fee_amount, stripe_minor_unit_multiplier($session->currency))       // 0 in test. Set in live mode?
                                 . ', session ID: ' . $session->id                                   // Unique identifier for the object.
                                 : ($session->cancel ? $session->cancellation_reason : $session->last_payment_error); // Cancelled
             // User (& error) message
-            $user_msg = $paid ? sprintf(trans('online_payment_successful'), '#' . $invoice->invoice_number)
+            $user_msg = $paid ? sprintf(trans('online_payment_successful'), '#' . htmlsc($invoice->invoice_number))
                               : trans('online_payment_failed') . '<br>' . sprintf(trans('online_payment_incomplete'), __CLASS__, $session->payment_status);
         } catch (Error|Exception|ErrorException $e) {
             $user_msg = trans('online_payment_error') . (empty($user_msg) ? '' : '<br>' . $user_msg);
             $paid     = 'error'; // tweak to reuse
             // Log the error so you can debug
             $response = __CLASS__ . '::' . __FUNCTION__ . ' exception: ' . $e->getMessage() . (empty($response) ? '' : ' - response: ' . $response);
-            log_message('error', strtr($response . ' user_msg: ' . $user_msg, ['<br>' => ' '])); // No br's
+            log_message('error', sanitize_for_logging(strtr($response . ' user_msg: ' . $user_msg, ['<br>' => ' ']))); // No br's
         } finally {
             $paid = is_bool($paid) ? ($paid ? 'success' : 'info') : $paid; // Tweak to reuse (flashdata alert_*)
             // Check stripe server ok

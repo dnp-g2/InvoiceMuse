@@ -6,7 +6,7 @@
 </head>
 
 <body>
-    <h3 class="report_title"><?php _trans('sales_by_date'); ?><br><small><?php echo $from_date . ' - ' . $to_date ?></small></h3>
+    <h3 class="report_title"><?php _trans('sales_by_date'); ?><br><small><?php echo htmlsc($from_date) . ' - ' . htmlsc($to_date); ?></small></h3>
 
     <table>
 
@@ -55,7 +55,7 @@ foreach ($results as $result) {
     ?>
 
         <tr>
-            <td style="border-bottom: none;text-align:center;"><?php echo $result->VAT_ID; ?></td>
+            <td style="border-bottom: none;text-align:center;"><?php _htmlsc($result->VAT_ID); ?></td>
             <td style="border-bottom: none;text-align:center;" rowspan="<?php echo $numRows; ?>"
                 valign="top"><?php _htmlsc($result->Name); ?></td>
             <td style="border-bottom: none;text-align:center;"><?php _trans('annual'); ?></td>

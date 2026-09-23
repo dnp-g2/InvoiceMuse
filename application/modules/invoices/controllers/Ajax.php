@@ -77,7 +77,7 @@ class Ajax extends Admin_Controller
                 $read_only = $invoice->is_read_only && !$this->config->item('disable_read_only');
                 $this->mdl_invoice_editor->validate($invoice, $items, $deleted_ids);
                 $number = $this->input->post('invoice_number');
-                if ($number !== null && $number !== '' && !preg_match('/^[a-zA-Z0-9\-_\/\.\s]+$/', $number)) {
+                if ($number !== null && $number !== '' && !preg_match('/^[^\x00-\x1F\x7F<>"\']+$/', $number)) {
                     throw new InvalidArgumentException(trans('invoice_number') . ' ' . trans('contains_invalid_characters'));
                 }
                 if (!array_key_exists((int)$this->input->post('invoice_status_id'), $this->mdl_invoices->statuses())) {
@@ -161,7 +161,7 @@ class Ajax extends Admin_Controller
                         ],
                     ];
 
-                    exit(json_encode($response));
+                    $this->json_encode_ajax($response);
                 }
             }
 
@@ -170,10 +170,12 @@ class Ajax extends Admin_Controller
             // Read invoice number from input
             $invoice_number = $this->input->post('invoice_number');
 
-            // Validate invoice_number: only allow safe characters (alphanumeric, dash, underscore, slash, period, space).
+            // Validate invoice_number: block control characters and HTML-relevant characters,
+            // but allow any other punctuation, since invoice_group_identifier_format lets
+            // admins put arbitrary literal characters (e.g. '#', '(', ')') into generated numbers.
             // If invalid characters are present, return a clear validation error instead of silently modifying input.
             if ($invoice_number !== null && $invoice_number !== '') {
-                if ( ! preg_match('/^[a-zA-Z0-9\-_\/\.\s]+$/', $invoice_number)) {
+                if ( ! preg_match('/^[^\x00-\x1F\x7F<>"\']+$/', $invoice_number)) {
                     $response = [
                         'success'           => 0,
                         'validation_errors' => [
@@ -181,7 +183,7 @@ class Ajax extends Admin_Controller
                         ],
                     ];
 
-                    exit(json_encode($response));
+                    $this->json_encode_ajax($response);
                 }
             }
 
@@ -255,12 +257,14 @@ class Ajax extends Admin_Controller
         if (!$read_only && !empty($response['success']) && $custom_data) {
             $result = $this->mdl_invoice_custom->save_custom($invoice_id, $custom_data);
             if ($result !== true) {
-                exit(json_encode(['success' => 0, 'save_incomplete' => true, 'validation_errors' => $result]));
+                $this->json_encode_ajax(['success' => 0, 'save_incomplete' => true, 'validation_errors' => $result]);
+
+                return;
             }
         }
 
         $response['property_revision'] = service_properties()->finish('invoice', (int)$invoice_id, !empty($response['success']));
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     public function save_invoice_tax_rate()
@@ -281,7 +285,7 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     /**
@@ -312,7 +316,7 @@ class Ajax extends Admin_Controller
         }
 
         // Return the response
-        exit(json_encode(['success' => $success, 'property_revision' => service_properties()->finish('invoice', (int)$invoice_id, (bool)$success)]));
+        $this->json_encode_ajax(['success' => $success, 'property_revision' => service_properties()->finish('invoice', (int)$invoice_id, (bool)$success)]);
     }
 
     public function get_item()
@@ -321,7 +325,7 @@ class Ajax extends Admin_Controller
 
         $item = $this->mdl_items->get_by_id($this->security->xss_clean($this->input->post('item_id', true)));
 
-        echo json_encode($item);
+        $this->json_encode_ajax($item);
     }
 
     public function modal_copy_invoice()
@@ -378,7 +382,7 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     public function modal_change_user()
@@ -427,7 +431,7 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     public function modal_change_client()
@@ -478,7 +482,7 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     public function modal_create_invoice()
@@ -524,7 +528,7 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     public function create_recurring()
@@ -547,7 +551,7 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     public function modal_create_recurring()
@@ -636,6 +640,6 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 }

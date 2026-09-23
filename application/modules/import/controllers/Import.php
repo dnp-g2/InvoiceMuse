@@ -99,6 +99,8 @@ class Import extends Admin_Controller
                             break;
                     }
                 }
+
+                $this->mdl_import->cleanup_import_files();
             }
 
             redirect('import');
@@ -110,6 +112,10 @@ class Import extends Admin_Controller
      */
     public function delete($id)
     {
+        if ( ! $this->ensure_valid_post_request('import')) {
+            return;
+        }
+
         $this->mdl_import->delete($id);
         redirect('import');
     }

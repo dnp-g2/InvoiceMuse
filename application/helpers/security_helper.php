@@ -187,115 +187,22 @@ function escape_url_for_javascript($url)
 }
 
 /**
- * Check if current user has access to a specific invoice.
- *
- * Security: Prevents IDOR (Insecure Direct Object Reference) vulnerabilities
- * by verifying the user owns or has access to the requested invoice.
- *
- * @param int $invoice_id The invoice ID to check
- *
- * @return bool True if user has access, false otherwise
- */
-function user_has_invoice_access($invoice_id)
-{
-    $CI = & get_instance();
-
-    // Normalize to integer to prevent type juggling
-    $user_type  = (int) $CI->session->userdata('user_type');
-    $user_id    = (int) $CI->session->userdata('user_id');
-    $invoice_id = (int) $invoice_id;
-
-    // Admin users have access to all invoices
-    if ($user_type === 1) {
-        return true;
-    }
-
-    // Guest users - check if invoice belongs to their assigned clients
-    if ($user_type === 2) {
-        $CI->load->model('invoices/mdl_invoices');
-        $CI->load->model('user_clients/mdl_user_clients');
-
-        $invoice = $CI->mdl_invoices->get_by_id($invoice_id);
-        if ( ! $invoice) {
-            return false;
-        }
-
-        // Get user's assigned clients
-        $user_clients = $CI->mdl_user_clients->assigned_to($user_id)->get()->result();
-        // Ensure all client IDs are integers for strict comparison
-        $client_ids = array_map('intval', array_column($user_clients, 'client_id'));
-
-        return in_array((int) $invoice->client_id, $client_ids, true);
-    }
-
-    // Regular users - check if they created the invoice
-    $CI->load->model('invoices/mdl_invoices');
-    $invoice = $CI->mdl_invoices->get_by_id($invoice_id);
-
-    if ( ! $invoice) {
-        return false;
-    }
-
-    return (int) $invoice->user_id === $user_id;
-}
-
-/**
- * Check if current user has access to a specific quote.
- *
- * Security: Prevents IDOR vulnerabilities for quote access.
- *
- * @param int $quote_id The quote ID to check
- *
- * @return bool True if user has access, false otherwise
- */
-function user_has_quote_access($quote_id)
-{
-    $CI = & get_instance();
-
-    // Normalize to integer to prevent type juggling
-    $user_type = (int) $CI->session->userdata('user_type');
-    $user_id   = (int) $CI->session->userdata('user_id');
-    $quote_id  = (int) $quote_id;
-
-    // Admin users have access to all quotes
-    if ($user_type === 1) {
-        return true;
-    }
-
-    // Guest users - check if quote belongs to their assigned clients
-    if ($user_type === 2) {
-        $CI->load->model('quotes/mdl_quotes');
-        $CI->load->model('user_clients/mdl_user_clients');
-
-        $quote = $CI->mdl_quotes->get_by_id($quote_id);
-        if ( ! $quote) {
-            return false;
-        }
-
-        // Get user's assigned clients
-        $user_clients = $CI->mdl_user_clients->assigned_to($user_id)->get()->result();
-        // Ensure all client IDs are integers for strict comparison
-        $client_ids = array_map('intval', array_column($user_clients, 'client_id'));
-
-        return in_array((int) $quote->client_id, $client_ids, true);
-    }
-
-    // Regular users - check if they created the quote
-    $CI->load->model('quotes/mdl_quotes');
-    $quote = $CI->mdl_quotes->get_by_id($quote_id);
-
-    if ( ! $quote) {
-        return false;
-    }
-
-    return (int) $quote->user_id === $user_id;
-}
-
-/**
  * Verify CSRF token for state-changing operations.
  *
  * Security: Protects against Cross-Site Request Forgery attacks.
  * Should be called at the beginning of any POST/PUT/DELETE controller action.
+ *
+ * When csrf_protection is enabled, CodeIgniter's Security::csrf_verify() has
+ * already fully validated the request during bootstrap (see the vendored
+ * system/core/Security.php): a forged or tokenless POST is aborted with a 403
+ * before any controller code runs, and a *valid* POST has its token removed
+ * from $_POST — and, with csrf_regenerate on, its cookie rotated too. Re-reading
+ * $_POST / $_COOKIE here would then see an empty token and reject every
+ * legitimate state-changing POST, which is exactly the "unable to delete
+ * invoice" bug (issue #1694). So on an enabled-protection POST we trust the
+ * framework check that already happened; the explicit double-submit comparison
+ * below only guards the residual cases (protection disabled, or a non-POST
+ * caller where CI3's csrf_verify() never ran).
  *
  * @return bool True if CSRF token is valid, false otherwise
  */
@@ -315,6 +222,15 @@ function verify_csrf_token(): bool
     // Get CSRF token from cookie
     $cookie_name    = config_item('csrf_cookie_name');
     $expected_token = $CI->input->cookie($cookie_name);
+
+    // CodeIgniter's global CSRF check already ran and passed for this POST
+    // (it consumes $_POST[$token_name] on success). Anything that failed its
+    // check never reaches a controller. Trust that instead of re-validating a
+    // token the framework deliberately cleared.
+    $request_method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? ''));
+    if ($request_method === 'POST' && $submitted_token === null && isset($CI->security)) {
+        return true;
+    }
 
     // Security: Enforce non-empty string tokens to prevent bypass when both are null
     if ( ! is_string($submitted_token) || empty($submitted_token)) {
@@ -343,4 +259,47 @@ function verify_csrf_token(): bool
     log_message('error', 'CSRF token mismatch from IP: ' . $safe_ip);
 
     return false;
+}
+
+/**
+ * Verify a CSRF token supplied as a request (query-string) parameter.
+ *
+ * Security: gates state-changing side effects that ride along a route which must
+ * stay GET-accessible (for example the "generate PDF" link that also marks an
+ * invoice as sent). A forged cross-site request — an `<img src="…">` tag, a link
+ * prefetch — cannot read the victim's CSRF cookie, so it cannot echo a matching
+ * token in the query string and the side effect is skipped. Same-origin UI links
+ * embed the token via `_csrf_query()` and pass the check. The read part of the
+ * route (streaming the PDF) is left untouched.
+ *
+ * @return bool True if the query-string token matches the CSRF cookie, false otherwise
+ */
+function verify_get_csrf_token(): bool
+{
+    $CI = & get_instance();
+
+    // Check if CSRF protection is enabled
+    if ( ! config_item('csrf_protection')) {
+        return true;
+    }
+
+    // Token echoed back by the same-origin link
+    $token_name      = config_item('csrf_token_name');
+    $submitted_token = $CI->input->get($token_name);
+
+    // Token the browser holds in the CSRF cookie
+    $cookie_name    = config_item('csrf_cookie_name');
+    $expected_token = $CI->input->cookie($cookie_name);
+
+    // Enforce non-empty string tokens to prevent bypass when both are null
+    if ( ! is_string($submitted_token) || $submitted_token === '') {
+        return false;
+    }
+
+    if ( ! is_string($expected_token) || $expected_token === '') {
+        return false;
+    }
+
+    // Timing-safe comparison
+    return hash_equals($expected_token, $submitted_token);
 }

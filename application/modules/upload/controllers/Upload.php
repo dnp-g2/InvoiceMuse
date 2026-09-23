@@ -66,15 +66,6 @@ class Upload extends Admin_Controller
         respond_file_message(200, 'upload_file_uploaded_successfully', $fileName);
     }
 
-    public function create_dir($path, $chmod = '0755'): bool
-    {
-        if ( ! is_dir($path) && ! is_link($path)) {
-            return mkdir($path, $chmod);
-        }
-
-        return true;
-    }
-
     public function show_files($url_key = null): void
     {
         header('Content-Type: application/json; charset=utf-8');
@@ -82,7 +73,7 @@ class Upload extends Admin_Controller
             exit('{}');
         }
 
-        exit(json_encode($result));
+        $this->json_encode_ajax($result);
     }
 
     public function delete_file(string $url_key): void
@@ -103,7 +94,16 @@ class Upload extends Admin_Controller
 
         $finalPath = $this->targetPath . $url_key . '_' . $filename;
 
-        if (realpath($this->targetPath) === mb_substr(realpath($finalPath), 0, mb_strlen(realpath($this->targetPath))) && ( ! file_exists($finalPath) || @unlink($finalPath))) {
+        // Security: realpath() (used by validate_file_in_directory()) returns false for a
+        // nonexistent path, so an already-deleted file must be handled before that check -
+        // $filename was already rejected above by sanitize_file_name() if it contained any
+        // path separator or traversal sequence, so $finalPath cannot escape $this->targetPath.
+        if ( ! file_exists($finalPath)) {
+            $this->mdl_uploads->delete_file($url_key, $filename);
+            respond_file_message(200, 'upload_file_deleted_successfully', $filename);
+        }
+
+        if (validate_file_in_directory($finalPath, $this->targetPath) && @unlink($finalPath)) {
             $this->mdl_uploads->delete_file($url_key, $filename);
             respond_file_message(200, 'upload_file_deleted_successfully', $filename);
         }
@@ -121,9 +121,13 @@ class Upload extends Admin_Controller
 
     public function get_file($filename): void
     {
-        // Security: Removed urldecode() - CodeIgniter already handles URL decoding
-        // First sanitize to handle the url_key_filename format
-        $filename = $this->sanitize_file_name($filename);
+        // First decode url & sanitize to handle the url_key_filename format
+        // Note: Work with all files - $filename is URL encoded (See helpers/dropzone_helper.php)
+        // [Old] urldecode() decodes + to a space, so a stored filename containing a literal + gets mangled.
+        // [New] rawurldecode() decodes %20/%E2%80%99 etc. identically but leaves + alone.
+        //       Still fully guarded by sanitize_file_name → validate_safe_filename → validate_file_in_directory afterwards.
+        $filename = $this->sanitize_file_name(rawurldecode($filename)); // rawurldecode: keep literal '+' (urldecode turns it into a space)
+        // dump: $filename => 1iKyYIgzZpewUa8EtN0MOXAGdTBDRfsC_Capture d’écran du 2025-10-15 02-43-47.png
 
         $underscorePos = mb_strpos($filename, '_');
         if ($underscorePos === false) {
@@ -173,6 +177,22 @@ class Upload extends Admin_Controller
         header('Content-Type: ' . $ctype);
         header('Content-Length: ' . $file_size);
         readfile($fullPath);
+    }
+
+    /**
+     * Not public: CI3 routes any public controller method directly via URL
+     * segments (e.g. /upload/upload/create_dir/<path>/<chmod>), which would
+     * let this be called with an attacker-controlled path and permission
+     * bits — an arbitrary mkdir() with no validation, CSRF, or confirmation.
+     * Only ever meant to be called internally from move_uploaded_file().
+     */
+    private function create_dir($path, $chmod = '0755'): bool
+    {
+        if ( ! is_dir($path) && ! is_link($path)) {
+            return mkdir($path, $chmod);
+        }
+
+        return true;
     }
 
     private function sanitize_file_name(string $filename): string

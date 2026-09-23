@@ -104,7 +104,7 @@ class Ajax extends Admin_Controller
                         ],
                     ];
 
-                    exit(json_encode($response));
+                    $this->json_encode_ajax($response);
                 }
             }
 
@@ -129,7 +129,7 @@ class Ajax extends Admin_Controller
                 'quote_status_id'        => $quote_status_id,
                 'quote_date_created'     => date_to_mysql($this->input->post('quote_date_created')),
                 'quote_date_expires'     => date_to_mysql($this->input->post('quote_date_expires')),
-                'quote_password'         => $this->input->post('quote_password'),
+                'quote_password'         => $this->security->xss_clean($this->input->post('quote_password')),
                 'notes'                  => $this->input->post('notes'),
                 'quote_discount_amount'  => standardize_amount($quote_discount_amount),
                 'quote_discount_percent' => standardize_amount($quote_discount_percent),
@@ -184,12 +184,12 @@ class Ajax extends Admin_Controller
                     'validation_errors' => $result,
                 ];
 
-                exit(json_encode($response));
+                $this->json_encode_ajax($response);
             }
         }
 
         $response['property_revision'] = service_properties()->finish('quote', (int)$quote_id, !empty($response['success']));
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     public function save_quote_tax_rate()
@@ -210,7 +210,7 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     /**
@@ -236,7 +236,7 @@ class Ajax extends Admin_Controller
         }
 
         // Return the response
-        exit(json_encode(['success' => $success, 'property_revision' => service_properties()->finish('quote', (int)$quote_id, (bool)$success)]));
+        $this->json_encode_ajax(['success' => $success, 'property_revision' => service_properties()->finish('quote', (int)$quote_id, (bool)$success)]);
     }
 
     public function get_item()
@@ -245,7 +245,7 @@ class Ajax extends Admin_Controller
 
         $item = $this->mdl_quote_items->get_by_id($this->input->post('item_id'));
 
-        exit(json_encode($item));
+        $this->json_encode_ajax($item);
     }
 
     public function modal_copy_quote()
@@ -301,7 +301,7 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     public function modal_change_user()
@@ -350,7 +350,7 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     public function modal_change_client()
@@ -401,7 +401,7 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     public function modal_create_quote()
@@ -442,7 +442,7 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 
     public function modal_quote_to_invoice($quote_id)
@@ -559,6 +559,6 @@ class Ajax extends Admin_Controller
             ];
         }
 
-        exit(json_encode($response));
+        $this->json_encode_ajax($response);
     }
 }

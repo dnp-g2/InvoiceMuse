@@ -53,8 +53,51 @@ class Users extends Admin_Controller
             redirect('users');
         }
 
+        $id = $id ? (int) $id : null;
+        $current_user_id = (int) $this->session->userdata('user_id');
+        $is_self_edit = $id && $id === $current_user_id;
+        $is_primary_admin = Mdl_Users::is_primary_administrator($current_user_id);
+
+        // Object-level authorization: only the primary administrator may edit
+        // another user's record. A peer administrator is limited to its own
+        // account, so it cannot rewrite user_id 1's role, email or password
+        // through this form (CWE-639 / CWE-269).
+        if ($id && !$is_self_edit && !$is_primary_admin) {
+            show_error(trans('access_denied'), 403);
+
+            return;
+        }
+
         if ($this->mdl_users->run_validation(($id) ? 'validation_rules_existing' : 'validation_rules')) {
-            $id = $this->mdl_users->save($id);
+            $db_array      = $this->mdl_users->db_array();
+            $requested_type = (int) $this->input->post('user_type');
+
+            // Only allow user_type changes through explicit authorization:
+            // - New user creation: set the requested type
+            // - Admin editing another user: set the requested type and invalidate sessions
+            // - User editing themselves: do not allow type changes (prevents self-escalation)
+            $old_user = $id ? $this->mdl_users->get_by_id($id) : null;
+            $role_changed = false;
+
+            if ( ! $is_self_edit) {
+                if ( ! $old_user || (int) $old_user->user_type !== $requested_type) {
+                    $db_array['user_type'] = $requested_type;
+                    $role_changed = true;
+                }
+            }
+
+            // Also detect if user is being deactivated; invalidate their sessions
+            // so the change takes effect immediately.
+            $requested_active = isset($db_array['user_active']) ? (int) $db_array['user_active'] : ($old_user ? (int) $old_user->user_active : 1);
+            if ($old_user && (int) $old_user->user_active !== $requested_active && $requested_active === 0) {
+                $role_changed = true;
+            }
+
+            $id = $this->mdl_users->save($id, $db_array);
+
+            if ($old_user && $role_changed) {
+                $this->invalidate_user_sessions($id);
+            }
 
             $this->load->model('custom_fields/mdl_user_custom');
             $this->mdl_user_custom->save_custom($id, $this->input->post('custom'));
@@ -168,6 +211,14 @@ class Users extends Admin_Controller
      */
     public function change_password(string $user_id)
     {
+        $acting_user_id = (string) $this->session->userdata('user_id');
+
+        if ((string) $user_id !== $acting_user_id && ! Mdl_Users::is_primary_administrator($acting_user_id)) {
+            show_error(trans('access_denied'), 403);
+
+            return;
+        }
+
         if ($this->input->post('btn_cancel')) {
             redirect('users');
         }
@@ -182,11 +233,39 @@ class Users extends Admin_Controller
     }
 
     /**
+     * Invalidate all sessions for a user when their role or active status changes,
+     * forcing immediate revocation of any stale privileged sessions.
+     *
+     * @param string|int $user_id
+     */
+    private function invalidate_user_sessions($user_id): void
+    {
+        $this->load->model('sessions/mdl_sessions');
+        $this->mdl_sessions->invalidate_user_sessions($user_id);
+    }
+
+    /**
      * @param $id
      */
     public function delete($id)
     {
-        if ($id != 1) {
+        if ( ! $this->ensure_valid_post_request('users/index')) {
+            return;
+        }
+
+        $current_user_id = (int) $this->session->userdata('user_id');
+
+        // Object-level authorization: only the primary administrator may delete
+        // another user's account. A peer administrator is limited to its own
+        // account, so it cannot delete other admin accounts through this endpoint
+        // (CWE-862 / CWE-269).
+        if ( ! Mdl_Users::is_primary_administrator($current_user_id)) {
+            show_error(trans('access_denied'), 403);
+
+            return;
+        }
+
+        if ( ! Mdl_Users::is_primary_administrator($id)) {
             $this->mdl_users->delete($id);
         }
 
@@ -199,7 +278,20 @@ class Users extends Admin_Controller
      */
     public function delete_user_client(string $user_id, $user_client_id)
     {
+        if ( ! $this->ensure_valid_post_request('users/form/' . $user_id)) {
+            return;
+        }
+
         $this->load->model('mdl_user_clients');
+
+        if ( ! $this->mdl_user_clients->can_user_manage($user_client_id)) {
+            show_error(trans('access_denied'), 403);
+        }
+
+        $user_client = $this->mdl_user_clients->get_by_id($user_client_id);
+        if ( ! $user_client) {
+            show_404();
+        }
 
         $this->mdl_user_clients->delete($user_client_id);
 

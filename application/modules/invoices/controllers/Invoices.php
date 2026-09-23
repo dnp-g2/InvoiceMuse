@@ -160,6 +160,8 @@ class Invoices extends Admin_Controller
             show_404();
         }
 
+        $invoice->invoice_password = $this->mdl_invoices->decrypt_invoice_password($invoice->invoice_password);
+
         $custom_fields = $this->mdl_custom_fields->by_table('ip_invoice_custom')->get()->result();
         $custom_values = [];
         foreach ($custom_fields as $custom_field) {
@@ -231,8 +233,19 @@ class Invoices extends Admin_Controller
 
     public function delete($invoice_id): void
     {
+        if ( ! $this->ensure_valid_post_request('invoices/index')) {
+            return;
+        }
+
         // Get the status of the invoice
-        $invoice        = $this->mdl_invoices->get_by_id($invoice_id);
+        $invoice = $this->mdl_invoices->get_by_id($invoice_id);
+
+        if ( ! $invoice) {
+            show_404();
+
+            return;
+        }
+
         $invoice_status = $invoice->invoice_status_id;
 
         if ($invoice_status == 1 || $this->config->item('enable_invoice_deletion') === true) {
@@ -259,9 +272,21 @@ class Invoices extends Admin_Controller
     {
         $this->load->helper(['pdf', 'template']);
 
+        // Security (CSRF): "mark as sent when generating the PDF" mutates invoice
+        // state — it assigns an official invoice number and flips the status to
+        // sent (optionally locking it read-only). That must never fire on a forged
+        // cross-site GET such as <img src=".../invoices/generate_pdf/ID">, so it
+        // only runs when the request carries a valid same-origin CSRF token. The
+        // PDF itself is a safe read and always streams, regardless of the token.
         if (get_setting('mark_invoices_sent_pdf') == 1) {
-            $this->mdl_invoices->generate_invoice_number_if_applicable($invoice_id);
-            $this->mdl_invoices->mark_sent($invoice_id);
+            if ( ! function_exists('verify_get_csrf_token')) {
+                $this->load->helper('security');
+            }
+
+            if (verify_get_csrf_token()) {
+                $this->mdl_invoices->generate_invoice_number_if_applicable($invoice_id);
+                $this->mdl_invoices->mark_sent($invoice_id);
+            }
         }
 
         // Security: Validate PDF template to prevent LFI
@@ -289,11 +314,12 @@ class Invoices extends Admin_Controller
         }
 
         // eInvoice library to Generate the appropriate UBL/CII or false
-        $xml_id    = $einvoice->name; // $invoice->client_einvoicing_version
-        $options   = [];
-        $generator = $xml_id;
-        $path      = APPPATH . 'helpers/XMLconfigs/';
-        if ($xml_id && file_exists($path . $xml_id . '.php') && include $path . $xml_id . '.php') {
+        $xml_id          = $einvoice->name; // $invoice->client_einvoicing_version
+        $options         = [];
+        $generator       = $xml_id;
+        $path            = APPPATH . 'helpers/XMLconfigs/';
+        $is_valid_xml_id = is_string($xml_id) && preg_match('/^[A-Za-z0-9-]+$/', $xml_id) === 1;
+        if ($is_valid_xml_id && file_exists($path . $xml_id . '.php') && include $path . $xml_id . '.php') {
             $embed_xml = $xml_setting['embedXML'];
             $XMLname   = $xml_setting['XMLname'];
             $options   = (empty($xml_setting['options']) ? $options : $xml_setting['options']); // Optional
@@ -332,6 +358,10 @@ class Invoices extends Admin_Controller
 
     public function delete_invoice_tax(string $invoice_id, $invoice_tax_rate_id): void
     {
+        if ( ! $this->ensure_valid_post_request('invoices/view/' . $invoice_id)) {
+            return;
+        }
+
         $this->load->model('invoices/mdl_invoice_tax_rates');
         $this->mdl_invoice_tax_rates->delete($invoice_tax_rate_id);
 
@@ -345,6 +375,10 @@ class Invoices extends Admin_Controller
 
     public function recalculate_all_invoices(): void
     {
+        if ( ! $this->ensure_valid_post_request('invoices/index')) {
+            return;
+        }
+
         $this->db->select('invoice_id');
         $invoice_ids = $this->db->get('ip_invoices')->result();
 
