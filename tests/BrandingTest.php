@@ -168,6 +168,20 @@ final class BrandingTest extends TestCase
         self::assertTrue(is_executable(self::ROOT . '/resources/release/build-package.sh'));
     }
 
+    #[Test]
+    public function it_denies_web_access_to_vendor(): void
+    {
+        $htaccess = $this->read('htaccess');
+        $forbid   = strpos($htaccess, 'RewriteRule ^vendor/ - [F,L]');
+        self::assertIsInt($forbid);
+        self::assertLessThan(strpos($htaccess, 'RewriteRule . /index.php [L]'), $forbid);
+
+        $nginx = $this->read('resources/docker/nginx/invoiceplane.conf');
+        foreach (['vendor', 'application'] as $directory) {
+            self::assertMatchesRegularExpression('#location \^~ /' . $directory . '/ \{\s*deny all;#', $nginx);
+        }
+    }
+
     private function read(string $path): string
     {
         $contents = file_get_contents(self::ROOT . '/' . $path);
