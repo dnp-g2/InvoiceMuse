@@ -25,6 +25,10 @@ if [ "$VERSION" != "$app_version" ] || [ "$VERSION" != "$package_version" ]; the
     exit 1
 fi
 
+# Resolve the output directory against the caller's working directory before leaving it
+mkdir -p "$OUT_DIR"
+OUT_DIR="$(cd "$OUT_DIR" && pwd)"
+
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
@@ -46,8 +50,6 @@ cp .github/CHANGELOG.md "$STAGE/CHANGELOG.md"
 cp .github/docs/INSTALLATION.md .github/docs/UPGRADE.md "$STAGE/"
 
 PACKAGE="invoicemuse-v${VERSION}.zip"
-mkdir -p "$OUT_DIR"
-OUT_DIR="$(cd "$OUT_DIR" && pwd)"
 rm -f "$OUT_DIR/$PACKAGE" "$OUT_DIR/$PACKAGE.sha256"
 (cd "$WORK/_package" && zip -q -r -X "$OUT_DIR/$PACKAGE" invoicemuse)
 (cd "$OUT_DIR" && sha256sum "$PACKAGE" > "$PACKAGE.sha256")
