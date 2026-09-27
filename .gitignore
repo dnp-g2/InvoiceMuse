@@ -47,3 +47,12 @@ yarn-error.log
 
 # Release packages from resources/release/build-package.sh
 /dist/
+
+# macOS metadata
+.DS_Store
+
+# Local preview output from tests/render-slate.php and similar scripts
+/output/
+
+# understand-anything knowledge graph cache
+/.ua/

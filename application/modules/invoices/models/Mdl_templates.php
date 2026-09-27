@@ -33,11 +33,13 @@ class Mdl_Templates extends CI_Model
     private const ALLOWED_INVOICE_TEMPLATES = [
         'pdf' => [
             'InvoiceMuse',
+            'Slate',
             'InvoiceMuse - paid',
             'InvoiceMuse - overdue',
         ],
         'public' => [
             'InvoiceMuse_Web',
+            'Slate_Web',
         ],
     ];
 
@@ -52,9 +54,11 @@ class Mdl_Templates extends CI_Model
     private const ALLOWED_QUOTE_TEMPLATES = [
         'pdf' => [
             'InvoiceMuse',
+            'Slate',
         ],
         'public' => [
             'InvoiceMuse_Web',
+            'Slate_Web',
         ],
     ];
 

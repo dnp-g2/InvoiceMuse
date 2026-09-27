@@ -1,0 +1,55 @@
+.slate-document { color: #50585c; font-family: dejavusans, Arial, sans-serif; font-size: 10pt; line-height: 1.38; }
+.slate-document table { border-collapse: collapse; width: 100%; }
+.slate-document td, .slate-document th { vertical-align: top; }
+.slate-banner { width: 100%; background: #444444; color: #ffffff; }
+.slate-banner td { vertical-align: middle; padding: 37pt 21pt; }
+.slate-banner .slate-heading { width: 65%; }
+.slate-title { font-size: 23pt; font-weight: normal; line-height: 1.2; }
+.slate-subtitle { font-size: 10pt; }
+.slate-banner .slate-highlight { width: 35%; text-align: center; background: #737373; }
+.slate-highlight-label { font-size: 10pt; }
+.slate-highlight-value { font-size: 23pt; line-height: 1.3; }
+.slate-intro { margin: 0 0 26pt; }
+.slate-intro td { padding: 0; }
+.slate-customer { width: 48%; }
+.slate-label { color: #858e93; text-transform: uppercase; letter-spacing: 0.5pt; }
+.slate-customer-contact { margin-top: 10pt; }
+.slate-details { width: 52%; }
+.slate-details th { text-align: right; font-weight: bold; padding: 0 9pt 4pt 0; }
+.slate-details td { padding-bottom: 4pt; }
+.slate-location { margin-top: 2pt; }
+.slate-items { table-layout: fixed; border-bottom: 2pt solid #dce0e2; }
+.slate-items th { padding: 10pt 12pt; text-align: right; color: #777f84; font-size: 9pt; text-transform: uppercase; white-space: nowrap; border-bottom: 2pt solid #dce0e2; }
+.slate-items td { padding: 10pt 12pt; vertical-align: top; }
+.slate-continuation td { padding-top: 0; }
+.slate-items .slate-service { text-align: left; }
+.slate-items .slate-shaded { background: #f3f4f4; }
+.slate-number { text-align: right; }
+.slate-description { white-space: normal; }
+.slate-unit { font-size: 8pt; }
+.slate-property td { background: #e8ebed; padding: 8pt 12pt; }
+.slate-property-total td { font-size: 9pt; padding-top: 8pt; padding-bottom: 8pt; }
+.slate-summary { margin-top: 12pt; }
+.slate-summary td { text-align: right; padding: 5pt 0 5pt 10pt; }
+.slate-summary .slate-summary-label { width: 80%; }
+.slate-summary .slate-summary-amount { width: 20%; }
+.slate-summary .slate-total td { font-weight: bold; }
+.slate-summary .slate-balance td { border-top: 2pt solid #dce0e2; padding-top: 12pt; font-weight: bold; }
+.slate-notes { margin-top: 20pt; }
+.slate-notes h2, .slate-attachments h2 { font-size: 10pt; margin: 0 0 6pt; }
+.slate-notes h2 { page-break-after: avoid; }
+.slate-note-paragraph { margin: 0 0 9pt; }
+.slate-thank-you { text-align: center; color: #858585; padding-top: 18pt; margin: 24pt 0 10pt; page-break-inside: avoid; }
+.slate-footer { color: #24282b; font-size: 9pt; border-top: 1pt solid #dce0e2; padding-top: 14pt; }
+.slate-footer td { padding: 0 10pt 0 0; }
+.slate-footer table { font-size: 9pt; }
+.slate-footer-logo { width: 30%; vertical-align: middle !important; }
+.slate-footer-company { width: 43%; }
+.slate-footer-contact { width: 27%; text-align: right; }
+.slate-logo { max-width: 110pt; max-height: 42pt; }
+.slate-pagination { color: #858585; text-align: center; font-size: 9pt; padding-top: 16pt; }
+.slate-extra-footer { padding-top: 8pt; font-size: 8pt; }
+.slate-incomplete { border: 2pt solid #a00; color: #a00; padding: 10pt; margin-bottom: 15pt; font-weight: bold; }
+.slate-qr { margin-top: 20pt; font-size: 9pt; }
+.slate-qr td { padding: 8pt; }
+.slate-qr img { max-width: 95pt; }

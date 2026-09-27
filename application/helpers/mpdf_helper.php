@@ -149,6 +149,12 @@ function pdf_create(
     $invoiceFooter = sanitize_pdf_footer_content($CI->mdl_settings->settings['pdf_invoice_footer'] ?? '');
     $quoteFooter   = sanitize_pdf_footer_content($CI->mdl_settings->settings['pdf_quote_footer'] ?? '');
 
+    // A template that ships its own <htmlpagefooter> has a footer of unknown height,
+    // so let mPDF grow the bottom margin to fit it and keep it clear of the content.
+    if (stripos((string) $html, '<htmlpagefooter') !== false) {
+        $mpdf->setAutoBottomMargin = 'stretch';
+    }
+
     //Set the default footer that shall always be available for mPDF
     $mpdf->DefHTMLFooterByName('defaultFooter', '');
 
