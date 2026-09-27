@@ -36,7 +36,16 @@ class Mdl_client_quick_create extends CI_Model
             return $requests[$key]['result'];
         }
         $engines = $this->db->query("SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('ip_clients','ip_user_clients','ip_service_properties')")->result_array();
-        if (count($engines) !== 3 || array_filter($engines, fn($r) => $r['ENGINE'] !== 'InnoDB') || !service_properties()->installed()) {
+        // Fixed diagnostic messages only; customer details and request tokens never reach the log.
+        $blockers = array_keys(array_filter([
+            'required database tables are missing.'          => count($engines) !== 3,
+            'required database tables must use InnoDB.'      => (bool) array_filter($engines, fn ($r) => $r['ENGINE'] !== 'InnoDB'),
+            'service properties installation is incomplete.' => ! service_properties()->installed(),
+        ]));
+        if ($blockers) {
+            foreach ($blockers as $blocker) {
+                log_message('error', 'Customer quick-create blocked: ' . $blocker);
+            }
             throw new RuntimeException('Customer creation is temporarily unavailable. Contact the administrator.');
         }
         if ((int)$this->db->query("SELECT GET_LOCK('ip:customer-review', 10) AS acquired")->row()->acquired !== 1) {

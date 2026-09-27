@@ -118,6 +118,12 @@ if [ -n "${CUSTOM_TEMPLATES_FOLDER:-}" ]; then
 fi
 
 cd /var/www/html && php index.php setup/cli/migrate
+# These feature schemas are not part of the numbered base migrations.
+# Install in dependency order before Apache accepts requests. Each is repeatable.
+php index.php service_properties cli install
+php index.php client_updates cli install
+php index.php client_updates cli upgrade_review
+php index.php clients cli install_note_archive
 php index.php setup/cli/create_default_user
 
 exec "$@"
